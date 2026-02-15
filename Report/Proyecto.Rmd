@@ -82,3 +82,61 @@ library("RColorBrewer")
 library("pheatmap")
 
 ```
+
+## Acceso a los datos
+```{r data, message=FALSE, warning=FALSE}
+# Cargar proyectos dispobibles en recount3
+human_projects <- available_projects()
+
+#Obtener la información del projecto específico
+project_info <- subset(human_projects, project == "SRP126485" & project_type == "data_sources")
+
+# Crear un objeto RangedSummarizedExperiment con información a nivel de genes
+rse_gene_SRP126485 <- create_rse(project_info)
+rse_gene_SRP126485
+
+```
+
+El estudio SRP126485 comprende 100 muestras provenientes de 14 individuos, evaluados en múltiples momentos bajo un diseño cruzado que considera dos condiciones: metformina y placebo. El conjunto de datos abarca mediciones de expresión correspondientes a 63 856 genes.
+
+## Preparación de los datos
+
+```{r trannsform_raw_count, message=FALSE, warning=FALSE}
+# Convetir las lecturas por núcleotido a cuentas por lectura 
+assay(rse_gene_SRP126485, "counts") <- compute_read_counts(rse_gene_SRP126485)
+
+# Inspeccionar la infromación experimental de cada muestra
+rse_gene_SRP126485$sra.sample_attributes[1:15]
+
+# Formatear información del experimento
+rse_gene_SRP126485 <-  expand_sra_attributes(rse_gene_SRP126485)
+colData(rse_gene_SRP126485)[
+    ,
+    grepl("^sra_attribute", colnames(colData(rse_gene_SRP126485)))
+]
+
+# Filtrar tejido adiposo de músculo esquéletico
+keep <- rse_gene_SRP126485$sra_attribute.tissue == "Vastus lateralis muscle"
+rse_muscle <- rse_gene_SRP126485[,keep]
+table(rse_muscle$sra_attribute.tissue)
+dim(rse_muscle)
+
+# Confirmar que cada individuo tenga muestras en ambas condiciones (Metformina y placebo)
+table(rse_muscle$sra_attribute.subject_id, rse_muscle$sra_attribute.drug)
+
+# Filtrar sujetos que no tengan una condición
+keep_subjects <- rse_muscle$sra_attribute.subject_id != "Subject8"
+rse_muscle <- rse_muscle[, keep_subjects]
+
+# Ajustar el tipo de dato de variables categóricas
+rse_muscle$sra_attribute.drug <- factor(rse_muscle$sra_attribute.drug)
+
+## Ajustar factor de drug para que placebo sea el baseline
+rse_muscle$sra_attribute.drug <-  relevel(rse_muscle$sra_attribute.drug, "Placebo")
+
+rse_muscle$sra_attribute.subject_id <- factor(rse_muscle$sra_attribute.subject_id)
+rse_muscle$sra_attribute.source_name <- factor(rse_muscle$sra_attribute.source_name)
+
+```
+
+
