@@ -30,6 +30,55 @@ La metformina es el tratamiento de primera línea para la diabetes tipo 2 debido
 
 El músculo esquelético desempeña un papel central en a homostasis metabólica del organismos y es particularmente suceptible a los cambios asociados al envejeciemiento. La peridad progresiva de masa y función celular, junto con alteraciones en la sensibilidad a la insulina y en la capacidad oxidativa, contribuyen al deterioro de la calidad de vida en adultos mayores. Comprender cómo la metformina modula la biología molecular del músculo esquelético puede aportar unformación clave sobre como los mecanismos mediante los cuaes este fármaco influye en la salud durante el envejecimiento. 
 
-En este proyecto se analizarán datos de secuenciación de ARN (RNA-seq) previamente publicados por Kulkarni et al. (2018), generados a partir de muestras de músculo esquelético de adultos de aproximadamente 70 años de edad (n=14). El estudio original se diseñó como un ensayo aleatorizado, doble ciego, controlado con placebo y con esquema cruzado, en el cual los participantes recibieron seis semanas de tratamiento con metformina y seis semanas con placebo.
 
-Con base en este diseño, el objetivo del presente proyecto es reanalizar los datos de RNA-seq mediante un flujo de trabajo reproducible de bioinformática y estadística. Específicamente, se realizará la identificación de genes diferencialmente expresados entre las condiciones de metformina y placebo, con el propósito de explorar los programas transcriptómicos modulados por el tratamiento en músculo esquelético envejecido.
+El conjunto de datos analizados en este proyecto se deriva del estudio de Kulkarni et al. (2018) generados a partir de muestras de músculo esquelético y tejido adiposo subcutáneo de adultos de aproximadamente 70 años de edad (n=14). El estudio original se diseñó como un ensayo aleatorizado, doble ciego, controlado con placebo y con esquema cruzado, en el cual los participantes recibieron seis semanas de tratamiento con metformina y seis semanas con placebo.
+
+# Pregunta de investigación 
+
+¿Qué cambios transcriptómicos se observan en el músculo esquelético de adultos mayores después de seis semanas de tratamiento con metformina?
+
+# Análisis
+
+Con la intención de elegir un proyecto disponible en recount3 para realizar un análisis de expresión diferencial, se conuslto la pagina de [recount3](https://rna.recount.bio/). Se eligió el proyecto SRP126485 "Metformin regulates metabolic and nonmetabolic pathways in skeletal muscle and subcutaneous adipose tissues of older adults". 
+
+## Instalación y carga de paquetes
+
+```{r load_packages, message=FALSE, warning=FALSE}
+
+# Instalar Biocmanageer si no está intalado
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+    install.packages("BiocManager")
+}
+
+# Instalar paquetes de Bioconductor
+#BiocManager::install(
+#    c(
+#        "edgeR", 
+#        "ExploreModelMatrix",
+#        "limma",
+#        "recount3", 
+#        "SummarizedExperiment", 
+#        "GenomicRanges"
+#    )
+#)
+
+# Instalar paquetes de CRAN
+#install.packages(c(
+#    "pheatmap", 
+#    "patchwork",
+#    "RColorBrewer",
+#    "cowplot"
+#))
+
+## Cargar los paquetes
+library("recount3")
+library("SummarizedExperiment")
+library("GenomicRanges")
+library("limma")
+library("edgeR")
+library("ExploreModelMatrix")
+library("cowplot")
+library("RColorBrewer")
+library("pheatmap")
+
+```
