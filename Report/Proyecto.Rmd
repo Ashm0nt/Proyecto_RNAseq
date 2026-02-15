@@ -1,0 +1,25 @@
+---
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 5
+    fig_caption: true
+    keep_tex: true
+    number_sections: true
+    latex_engine: xelatex
+    includes:
+      before_body: portada.tex
+fontsize: 11pt
+mainfont: Arial
+lang: es
+header-includes:
+  - \usepackage{float}
+  - \usepackage{graphicx}
+  - \usepackage{geometry}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+editor_options: 
+  markdown: 
+    wrap: 72
+bibliography: References.bib
+---
