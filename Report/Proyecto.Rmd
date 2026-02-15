@@ -139,4 +139,5 @@ rse_muscle$sra_attribute.source_name <- factor(rse_muscle$sra_attribute.source_n
 
 ```
 
+ Las muestras correspondientes a músculo esquelético se seleccionaron utilizando la variable `sra_attribute.tissue` contenida en el objeto, conservando únicamente aquellas anotadas como tejido muscular. Durante la inspección del diseño experimental se identificó que uno de los individuos (Subject8) no contaba con muestras en ambas condiciones. Dado que el análisis se basa en comparaciones pareadas dentro de sujeto, este individuo fue excluido para mantener la consistencia del modelo. Además las variables correspondientes al individuo y al tratamiento se codificaron como factores, estableciendo placebo como la categoría de referencia para facilitar la interpretación de los análisis posteriores.
 
