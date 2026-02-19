@@ -80,6 +80,7 @@ library("ExploreModelMatrix")
 library("cowplot")
 library("RColorBrewer")
 library("pheatmap")
+library("ggplot2")
 
 ```
 
@@ -134,10 +135,106 @@ rse_muscle$sra_attribute.drug <- factor(rse_muscle$sra_attribute.drug)
 ## Ajustar factor de drug para que placebo sea el baseline
 rse_muscle$sra_attribute.drug <-  relevel(rse_muscle$sra_attribute.drug, "Placebo")
 
-rse_muscle$sra_attribute.subject_id <- factor(rse_muscle$sra_attribute.subject_id)
 rse_muscle$sra_attribute.source_name <- factor(rse_muscle$sra_attribute.source_name)
 
 ```
 
  Las muestras correspondientes a músculo esquelético se seleccionaron utilizando la variable `sra_attribute.tissue` contenida en el objeto, conservando únicamente aquellas anotadas como tejido muscular. Durante la inspección del diseño experimental se identificó que uno de los individuos (Subject8) no contaba con muestras en ambas condiciones. Dado que el análisis se basa en comparaciones pareadas dentro de sujeto, este individuo fue excluido para mantener la consistencia del modelo. Además las variables correspondientes al individuo y al tratamiento se codificaron como factores, estableciendo placebo como la categoría de referencia para facilitar la interpretación de los análisis posteriores.
+
+## Control de calidad 
+
+### Profundidad de secuenciación 
+
+```{r sequencing_depth, message=FALSE, warning=FALSE, echo=TRUE}
+# Obtener las cuentas
+counts <- assay(rse_muscle, "counts")
+# Obtener el tamaño de librería
+lib_sizes <- colSums(counts)
+
+# Sumary
+summary(lib_sizes)
+
+# Crear data frame 
+sequencing_depth <- data.frame(
+    sample = colnames(rse_muscle),
+    lib_size = lib_sizes,
+    drug = rse_muscle$sra_attribute.drug,
+    subject = rse_muscle$sra_attribute.subject_id,
+    source = rse_muscle$sra_attribute.source_name
+)
+
+#Graficar 
+ggplot(sequencing_depth, aes(x = drug, y = lib_size, fill = drug)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, alpha = 0.7) +
+  labs(
+    title = "Library size por tratamiento",
+    x = "Tratamiento",
+    y = "Número de lecturas"
+  ) +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(size = 18, face = "bold", hjust = 0.5,
+                              color = "#222222"),
+    axis.title.y = element_text(size = 13, margin = margin(r = 12)),
+    axis.text.x = element_text(size = 13, face = "bold", color = "#222222"),
+    axis.text.y = element_text(size = 11, color = "#333333"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(color = "gray85", linewidth = 0.6),
+    panel.grid.minor.y = element_line(color = "gray93", linewidth = 0.4),
+    legend.position = "none",
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.border = element_rect(color = "gray80", fill = NA, linewidth = 0.5)
+  )
+
+```
+
+La mayoría de las muestras presentaron profundidades de secuenciación dentro del rango esperado para estudios de RNA-seq en humanos (mediana ≈ 16 millones de lecturas). Se identificó una muestra con un tamaño de biblioteca considerablemente menor (~0.9 millones) correspondiente a `Subject7`durante tratamiento placebo. 
+
+### Lecturas asignadas a genes
+
+```{r lectures_genes, message=FALSE, warning=FALSE, echo=TRUE}
+# Calcular la proporción de lecturas asignadas a genes
+rse_muscle$assigned_gene_prop <-
+  rse_muscle$recount_qc.gene_fc_count_all.assigned /
+  rse_muscle$recount_qc.gene_fc_count_all.total
+
+# Resumen
+summary(rse_muscle$assigned_gene_prop)
+
+#Visualización
+df_qc <- data.frame(
+  assigned_gene_prop = rse_muscle$assigned_gene_prop
+)
+
+ggplot(df_qc, aes(x = assigned_gene_prop)) +
+  geom_histogram(bins = 20, color = "black", fill = "#2C7FB8") +
+  theme_bw() +
+  labs(
+    title = "Proporción de lecturas asignadas a genes",
+    x = "Fracción de lecturas",
+    y = "Número de muestras"
+  )
+
+#Filtrar muestras con pocas lescturas asignadas
+rse_muscle_filtered <- rse_muscle[,rse_muscle$assigned_gene_prop > 0.3]
+
+# Filtrar sujetos
+tab <- table(rse_muscle_filtered$sra_attribute.subject_id,
+             rse_muscle_filtered$sra_attribute.drug)
+
+# Sujetos con ambas condiciones
+complete_subjects <- rownames(tab)[rowSums(tab > 0) == 2]
+
+rse_muscle_filtered <- rse_muscle_filtered[,
+  rse_muscle_filtered$sra_attribute.subject_id %in% complete_subjects
+]
+
+table(rse_muscle_filtered$sra_attribute.subject_id, rse_muscle_filtered$sra_attribute.drug)
+```
+
+Se eliminaron los sujetos 5 y 14 debido a que tras el filtrado no contaban con muestras en ambas condiciones.
+
+
+### Filtrado de genes 
 
