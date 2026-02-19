@@ -116,11 +116,20 @@ colData(rse_gene_SRP126485)[
     grepl("^sra_attribute", colnames(colData(rse_gene_SRP126485)))
 ]
 
+
 # Filtrar tejido adiposo de músculo esquéletico
 keep <- rse_gene_SRP126485$sra_attribute.tissue == "Vastus lateralis muscle"
 rse_muscle <- rse_gene_SRP126485[,keep]
 table(rse_muscle$sra_attribute.tissue)
 dim(rse_muscle)
+
+# Ajustar el tipo de dato de variables categóricas
+rse_muscle$sra_attribute.drug <- factor(rse_muscle$sra_attribute.drug)
+rse_muscle$sra_attribute.source_name <- factor(rse_muscle$sra_attribute.source_name)
+
+## Ajustar factor de drug para que placebo sea el baseline
+rse_muscle$sra_attribute.drug <-  relevel(rse_muscle$sra_attribute.drug, "Placebo")
+
 
 # Confirmar que cada individuo tenga muestras en ambas condiciones (Metformina y placebo)
 table(rse_muscle$sra_attribute.subject_id, rse_muscle$sra_attribute.drug)
@@ -128,15 +137,6 @@ table(rse_muscle$sra_attribute.subject_id, rse_muscle$sra_attribute.drug)
 # Filtrar sujetos que no tengan una condición
 keep_subjects <- rse_muscle$sra_attribute.subject_id != "Subject8"
 rse_muscle <- rse_muscle[, keep_subjects]
-
-# Ajustar el tipo de dato de variables categóricas
-rse_muscle$sra_attribute.drug <- factor(rse_muscle$sra_attribute.drug)
-
-## Ajustar factor de drug para que placebo sea el baseline
-rse_muscle$sra_attribute.drug <-  relevel(rse_muscle$sra_attribute.drug, "Placebo")
-
-rse_muscle$sra_attribute.source_name <- factor(rse_muscle$sra_attribute.source_name)
-
 ```
 
  Las muestras correspondientes a músculo esquelético se seleccionaron utilizando la variable `sra_attribute.tissue` contenida en el objeto, conservando únicamente aquellas anotadas como tejido muscular. Durante la inspección del diseño experimental se identificó que uno de los individuos (Subject8) no contaba con muestras en ambas condiciones. Dado que el análisis se basa en comparaciones pareadas dentro de sujeto, este individuo fue excluido para mantener la consistencia del modelo. Además las variables correspondientes al individuo y al tratamiento se codificaron como factores, estableciendo placebo como la categoría de referencia para facilitar la interpretación de los análisis posteriores.
@@ -237,4 +237,49 @@ Se eliminaron los sujetos 5 y 14 debido a que tras el filtrado no contaban con m
 
 
 ### Filtrado de genes 
+
+```{r}
+# Obtener counts
+counts_muscle_filtered <- assay(rse_muscle_filtered, "counts")
+
+# Transformar sujeto a factor
+subject <- factor(rse_muscle_filtered$sra_attribute.subject_id)
+
+#Grupo de tratamiento
+group <- rse_muscle_filtered$sra_attribute.drug
+
+# Cargar los datos a un formato DGE
+dge <- DGEList(counts = counts_muscle_filtered)
+
+# Diseño de estudio
+desing <- model.matrix(~ subject + group)
+
+# Crear objeto DGEList
+dge <- DGEList(counts = counts_muscle_filtered)
+
+# Diseño correcto
+design <- model.matrix(~ subject + group)
+
+# Filtrar genes
+keep_genes <- filterByExpr(dge, design = design)
+dge <- dge[keep_genes, , keep.lib.sizes = FALSE]
+
+# Normalización
+dge <- calcNormFactors(dge, method = "TMM") 
+
+# Número de genes filtrados
+num_genes_retenidos <- sum(keep_genes)
+num_genes_totales <- nrow(counts_muscle_filtered)
+
+# Porcentaje de genes retenidos
+porcentaje_genes <- (num_genes_retenidos / num_genes_totales) * 100
+
+cat("Genes retenidos:", num_genes_retenidos, "\n")
+cat("Total de genes:", num_genes_totales, "\n")
+cat(sprintf("Porcentaje de genes retenidos: %.2f%%\n", porcentaje_genes))
+````
+
+
+## Instalación y carga de paquetes
+
 
