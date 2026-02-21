@@ -77,6 +77,7 @@ library("GenomicRanges")
 library("limma")
 library("edgeR")
 library("ExploreModelMatrix")
+library("variancePartition")
 library("cowplot")
 library("RColorBrewer")
 library("pheatmap")
@@ -125,6 +126,11 @@ dim(rse_muscle)
 
 # Ajustar el tipo de dato de variables categóricas
 rse_muscle$sra_attribute.drug <- factor(rse_muscle$sra_attribute.drug)
+
+# Eliminar espacios antes o después del guion
+rse_muscle$sra_attribute.source_name <- gsub("\\s*-\\s*", "-", 
+                                             rse_muscle$sra_attribute.source_name)
+
 rse_muscle$sra_attribute.source_name <- factor(rse_muscle$sra_attribute.source_name)
 
 ## Ajustar factor de drug para que placebo sea el baseline
@@ -242,30 +248,25 @@ Se eliminaron los sujetos 5 y 14 debido a que tras el filtrado no contaban con m
 # Obtener counts
 counts_muscle_filtered <- assay(rse_muscle_filtered, "counts")
 
-# Transformar sujeto a factor
-subject <- factor(rse_muscle_filtered$sra_attribute.subject_id)
-
-#Grupo de tratamiento
-group <- rse_muscle_filtered$sra_attribute.drug
-
-# Cargar los datos a un formato DGE
+# Crear DGEList primero
 dge <- DGEList(counts = counts_muscle_filtered)
 
-# Diseño de estudio
-desing <- model.matrix(~ subject + group)
+# Crear metadata correctamente
+meta <- data.frame(
+  group   = factor(rse_muscle_filtered$sra_attribute.drug),
+  subject = factor(rse_muscle_filtered$sra_attribute.subject_id),
+  visit   = factor(rse_muscle_filtered$sra_attribute.source_name)
+)
 
-# Crear objeto DGEList
-dge <- DGEList(counts = counts_muscle_filtered)
+# IMPORTANTE: rownames deben coincidir con columnas de counts
+rownames(meta) <- colnames(dge)
 
-# Diseño correcto
-design <- model.matrix(~ subject + group)
+# Diseño para filtrado
+design <- model.matrix(~ group, meta)
 
 # Filtrar genes
 keep_genes <- filterByExpr(dge, design = design)
 dge <- dge[keep_genes, , keep.lib.sizes = FALSE]
-
-# Normalización
-dge <- calcNormFactors(dge, method = "TMM") 
 
 # Número de genes filtrados
 num_genes_retenidos <- sum(keep_genes)
@@ -277,9 +278,46 @@ porcentaje_genes <- (num_genes_retenidos / num_genes_totales) * 100
 cat("Genes retenidos:", num_genes_retenidos, "\n")
 cat("Total de genes:", num_genes_totales, "\n")
 cat(sprintf("Porcentaje de genes retenidos: %.2f%%\n", porcentaje_genes))
-````
+```
 
 
-## Instalación y carga de paquetes
+### Exploración de varianza
 
+```{r}
+
+colores <- c("#3dd0eeff", "#FF7F7F")
+plotMDS(dge, 
+        col = colores[as.numeric(meta$group)],
+        pch = 16,
+        cex = 1.5,
+        main = "MDS por tratamiento",
+        xlab = "Dimensión 1",
+        ylab = "Dimensión 2")
+
+# Añadir leyenda mejorada
+legend("bottomright", 
+       legend = levels(meta$group),
+       col = colores[1:length(levels(meta$group))], 
+       pch = 16,
+       cex = 0.7,
+       title = "Tratamiento",
+       bty = "o",           # Con borde
+       bg = "white",        # Fondo blanco
+       box.lwd = 1)         # Grosor del borde
+```
+
+El análisis de escalamiento multidimensional (MDS) no mostró una separación evidente entre las condiciones de metformina y placebo en los primeros componentes principales. Dado que el MDS sugiere la presencia de múltiples fuentes de variabilidad en los datos, se procedió a realizar un análisis de partición de varianza mediante modelos lineales mixtos para cuantificar formalmente la contribución relativa del sujeto y del tratamiento a la variación transcriptómica observada.
+
+```{r}
+form_vp <- ~ (1|group) + (1|subject) + (1|visit)
+vobj <- voomWithDreamWeights(dge, form, meta, BPPARAM = param)
+vp <- fitExtractVarPartModel(vobj, form_vp, meta, BPPARAM = param)
+plotVarPart(vp)
+```
+
+
+Para evaluar la contribución de las variables experimentales a la varianza global de los datos de expresión génica, se realizó un análisis de partición de la varianza. El factor 'subject' (sujeto) emergió como una fuente significativa de variación, explicando una proporción sustancial de la varianza en un gran número de genes, lo que justifica su inclusión en el modelo lineal para controlar la heterogeneidad interindividual. Por el contrario, las variables 'group' (grupo) y 'visit' (visita) mostraron una contribución marginal a la varianza total en la mayoría de los genes. Cabe destacar que se observó una fracción elevada de varianza residual, lo que sugiere la presencia de ruido técnico o biológico no capturado por el diseño inicial, subrayando la importancia de emplear métodos robustos de normalización y filtrado antes del análisis de expresión diferencial
+
+
+### Análisis de expresión diferencial
 
