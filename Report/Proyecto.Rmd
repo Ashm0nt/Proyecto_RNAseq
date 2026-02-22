@@ -26,12 +26,12 @@ bibliography: References.bib
 
 # Introducción
 
-La metformina es el tratamiento de primera línea para la diabetes tipo 2 debido a su eficacia para disminuir la gluconeogénesis hepática y mejorar la sensibilidad a la insulina. Además de su acción antihiperglucémica, este fármaco presenta múltiples efectos pleiotrópicos en diversos procesos biológicos, entre ellos la inflamación, el estrés oxidativo, la senescencia celular, la autofagia y la apoptosis, todos estrechamente vinculados con el envejecimiento. Estudios epidemiológicos han sugerido un posible efecto geroprotector de la metformina, asociado con la reducción en la incidencia de enfermedades relacionadas con la edad, como las enfermedades cardiovasculares, distintos tipos de cáncer y padecimientos neurodegenerativos, así como con una disminución de la mortalidad independiente de sus efectos sobre el metabolismo de la glucosa.
+La metformina es el tratamiento de primera línea para la diabetes tipo 2 debido a su eficacia para disminuir la gluconeogénesis hepática y mejorar la sensibilidad a la insulina. Además de su acción antihiperglucémica, este fármaco presenta múltiples efectos pleiotrópicos en diversos procesos biológicos, entre ellos la inflamación, el estrés oxidativo, la senescencia celular, la autofagia y la apoptosis, todos estrechamente vinculados con el envejecimiento [@Kulkarni2020; @Kulkarni2018; @Dutta2023]. Estudios epidemiológicos han sugerido un posible efecto geroprotector de la metformina, asociado con la reducción en la incidencia de enfermedades relacionadas con la edad, como las enfermedades cardiovasculares, distintos tipos de cáncer y padecimientos neurodegenerativos, así como con una disminución de la mortalidad independiente de sus efectos sobre el metabolismo de la glucosa [@Kulkarni2020; @Kulkarni2018; @Dutta2023].
 
-El músculo esquelético desempeña un papel central en a homostasis metabólica del organismos y es particularmente suceptible a los cambios asociados al envejeciemiento. La peridad progresiva de masa y función celular, junto con alteraciones en la sensibilidad a la insulina y en la capacidad oxidativa, contribuyen al deterioro de la calidad de vida en adultos mayores. Comprender cómo la metformina modula la biología molecular del músculo esquelético puede aportar unformación clave sobre como los mecanismos mediante los cuaes este fármaco influye en la salud durante el envejecimiento. 
+El músculo esquelético desempeña un papel central en a homostasis metabólica del organismos y es particularmente suceptible a los cambios asociados al envejeciemiento. La peridad progresiva de masa y función celular, junto con alteraciones en la sensibilidad a la insulina y en la capacidad oxidativa, contribuyen al deterioro de la calidad de vida en adultos mayores. Comprender cómo la metformina modula la biología molecular del músculo esquelético puede aportar unformación clave sobre como los mecanismos mediante los cuaes este fármaco influye en la salud durante el envejecimiento [@Kulkarni2018]. 
+ 
 
-
-El conjunto de datos analizados en este proyecto se deriva del estudio de Kulkarni et al. (2018) generados a partir de muestras de músculo esquelético y tejido adiposo subcutáneo de adultos de aproximadamente 70 años de edad (n=14). El estudio original se diseñó como un ensayo aleatorizado, doble ciego, controlado con placebo y con esquema cruzado, en el cual los participantes recibieron seis semanas de tratamiento con metformina y seis semanas con placebo.
+El conjunto de datos analizados en este proyecto se deriva del estudio de Kulkarni et al. [@Kulkarni2018] generados a partir de muestras de músculo esquelético y tejido adiposo subcutáneo de adultos de aproximadamente 70 años de edad (n=14). El estudio original se diseñó como un ensayo aleatorizado, doble ciego, controlado con placebo y con esquema cruzado, en el cual los participantes recibieron seis semanas de tratamiento con metformina y seis semanas con placebo.
 
 # Pregunta de investigación 
 
@@ -39,7 +39,15 @@ El conjunto de datos analizados en este proyecto se deriva del estudio de Kulkar
 
 # Análisis
 
-Con la intención de elegir un proyecto disponible en recount3 para realizar un análisis de expresión diferencial, se conuslto la pagina de [recount3](https://rna.recount.bio/). Se eligió el proyecto SRP126485 "Metformin regulates metabolic and nonmetabolic pathways in skeletal muscle and subcutaneous adipose tissues of older adults". 
+Con la intención de elegir un proyecto disponible en recount3 para realizar un análisis de expresión diferencial, se conuslto la pagina de [recount3](https://rna.recount.bio/). Se eligió el proyecto SRP126485 "Metformin regulates metabolic and nonmetabolic pathways in skeletal muscle and subcutaneous adipose tissues of older adults".
+
+Dada la naturaleza del diseño del estudio (muestras pareadas de los mismos sujetos en diferentes condiciones) y la inherente heterogeneidad biológica de la población geriátrica, se implementó la siguiente estrategia bioinformática
+
+- `variancePartition`: Cuantificar la contribución relativa de las variables experimentales (sujeto, tratamiento, visita) a la varianza global de los datos de expresión génica, lo que permitió confirmar que la identidad del Sujeto era la fuente dominante de variabilidad, estableciendo la necesidad de un modelo estadístico capaz de manejar efectos aleatorios.
+
+- `dream`: Integrar la variabilidad interindividual como un efecto aleatorio dentro del marco de trabajo de limma/voom, permitiendo identificar genes diferencialmente expresados con mayor sensibilidad y robustez frente al ruido biológico, a pesar del tamaño de muestra limitado, permitiendo una estimación más precisa de los coeficientes de regresión para la variable de interés (tratamiento con metformina).
+
+Además se utilizaron diferentes visualizaciones para explorar la calidad de los datos, la estructura de varianza y los resultados de expresión diferencial, incluyendo boxplots para la profundidad de secuenciación, histogramas para la proporción de lecturas asignadas a genes, MA plots y Volcano plots para la expresión diferencial, y heatmaps para patrones de expresión en genes seleccionados. También MDS plots  para evaluar la separación de las muestras en un espacio reducido, comparando la topología global del transcriptoma frente a la topología definida exclusivamente por los genes identificados mediante el modelo.
 
 ## Instalación y carga de paquetes
 
@@ -50,25 +58,17 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
     install.packages("BiocManager")
 }
 
-# Instalar paquetes de Bioconductor
-#BiocManager::install(
-#    c(
-#        "edgeR", 
-#        "ExploreModelMatrix",
-#        "limma",
-#        "recount3", 
-#        "SummarizedExperiment", 
-#        "GenomicRanges"
-#    )
-#)
-
-# Instalar paquetes de CRAN
-#install.packages(c(
-#    "pheatmap", 
-#    "patchwork",
-#    "RColorBrewer",
-#    "cowplot"
-#))
+# Instalar paquetes necesarios
+# BiocManager::install(c(
+#   "edgeR",
+#   "limma",
+#   "recount3",
+#   "SummarizedExperiment",
+#   "GenomicRanges",
+#   "ExploreModelMatrix",
+#   "variancePartition",
+#   "EnhancedVolcano"
+# ))
 
 ## Cargar los paquetes
 library("recount3")
@@ -79,26 +79,41 @@ library("edgeR")
 library("ExploreModelMatrix")
 library("variancePartition")
 library("EnhancedVolcano")
-library("cowplot")
-library("RColorBrewer")
 library("pheatmap")
 library("ggplot2")
 
 ```
 
 ## Acceso a los datos
-```{r data, message=FALSE, warning=FALSE}
-# Cargar proyectos dispobibles en recount3
+```{r load_data, message=FALSE, warning=FALSE}
+# ------------------------------------------------------------
+# Descarga y preparación de datos desde recount3
+# Proyecto: SRP126485
+# ------------------------------------------------------------
+
+# Obtener listado de proyectos disponibles en recount3
 human_projects <- available_projects()
 
-#Obtener la información del projecto específico
-project_info <- subset(human_projects, project == "SRP126485" & project_type == "data_sources")
+# Filtrar el proyecto de interés
+project_info <- subset(
+  human_projects,
+  project == "SRP126485" & 
+  project_type == "data_sources"
+)
 
-# Crear un objeto RangedSummarizedExperiment con información a nivel de genes
+# Verificar que el proyecto fue encontrado
+if (nrow(project_info) == 0) {
+  stop("El proyecto SRP126485 no fue encontrado en recount3.")
+}
+
+# Crear objeto RangedSummarizedExperiment a nivel de gen
 rse_gene_SRP126485 <- create_rse(project_info)
+
+# Inspección rápida del objeto
 rse_gene_SRP126485
 
 ```
+
 
 El estudio SRP126485 comprende 100 muestras provenientes de 14 individuos, evaluados en múltiples momentos bajo un diseño cruzado que considera dos condiciones: metformina y placebo. El conjunto de datos abarca mediciones de expresión correspondientes a 63 856 genes.
 
