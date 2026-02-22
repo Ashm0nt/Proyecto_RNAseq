@@ -78,6 +78,7 @@ library("limma")
 library("edgeR")
 library("ExploreModelMatrix")
 library("variancePartition")
+library("EnhancedVolcano")
 library("cowplot")
 library("RColorBrewer")
 library("pheatmap")
@@ -249,7 +250,7 @@ Se eliminaron los sujetos 5 y 14 debido a que tras el filtrado no contaban con m
 counts_muscle_filtered <- assay(rse_muscle_filtered, "counts")
 
 # Crear DGEList primero
-dge <- DGEList(counts = counts_muscle_filtered)
+dge <- DGEList(counts = counts_muscle_filtered, genes = rowData(rse_muscle_filtered))
 
 # Crear metadata correctamente
 meta <- data.frame(
@@ -267,6 +268,15 @@ design <- model.matrix(~ group, meta)
 # Filtrar genes
 keep_genes <- filterByExpr(dge, design = design)
 dge <- dge[keep_genes, , keep.lib.sizes = FALSE]
+
+#Obtener nombres de genes filtrados
+gene_info <- as.data.frame(rowData(rse_muscle_filtered))
+gene_info_filtered <- gene_info[keep_genes, ]
+
+dge$genes <- data.frame(
+  ENSEMBL = rownames(dge),
+  SYMBOL  = gene_info_filtered$gene_name
+)
 
 # Número de genes filtrados
 num_genes_retenidos <- sum(keep_genes)
@@ -295,11 +305,11 @@ plotMDS(dge,
         ylab = "Dimensión 2")
 
 # Añadir leyenda mejorada
-legend("bottomright", 
+legend("topright", 
        legend = levels(meta$group),
        col = colores[1:length(levels(meta$group))], 
        pch = 16,
-       cex = 0.7,
+       cex = 0.8,
        title = "Tratamiento",
        bty = "o",           # Con borde
        bg = "white",        # Fondo blanco
@@ -310,7 +320,7 @@ El análisis de escalamiento multidimensional (MDS) no mostró una separación e
 
 ```{r}
 form_vp <- ~ (1|group) + (1|subject) + (1|visit)
-vobj <- voomWithDreamWeights(dge, form, meta, BPPARAM = param)
+vobj <- voomWithDreamWeights(dge, form_vp, meta, BPPARAM = param)
 vp <- fitExtractVarPartModel(vobj, form_vp, meta, BPPARAM = param)
 plotVarPart(vp)
 ```
@@ -320,4 +330,170 @@ Para evaluar la contribución de las variables experimentales a la varianza glob
 
 
 ### Análisis de expresión diferencial
+
+```{r}
+form_de <- ~ group + (1|subject)
+param <- SerialParam(progressbar = TRUE)
+vobj_de <- voomWithDreamWeights(dge, form_de, meta, BPPARAM = param, plot=TRUE)
+fit <- dream(vobj_de, form_de, meta, BPPARAM = param)
+fit <- eBayes(fit)
+res <- topTable(fit, coef = "groupMetformin", number = Inf, sort.by = "P")
+head(res)
+```
+
+
+```{r}
+
+df <- data.frame(
+  AveExpr = res$AveExpr,
+  logFC = res$logFC,
+  P = res$P.Value,
+  FDR = res$adj.P.Val
+)
+
+df$Significant <- df$FDR < 0.05
+
+ggplot(df, aes(AveExpr, logFC)) +
+  
+  # No significativos
+  geom_point(data = subset(df, Significant == FALSE),
+             color = "grey75",
+             alpha = 0.5,
+             size = 1) +
+  
+  # Significativos encima
+  geom_point(data = subset(df, Significant == TRUE),
+             color = "#ff3c3cff", 
+             alpha = 0.9,
+             size = 1.3) +
+  
+  # Línea central
+  geom_hline(yintercept = 0,
+             color = "black",
+             linewidth = 0.6) +
+  
+  # Umbral biológico ±1
+  geom_hline(yintercept = c(-1,1),
+             linetype = "dashed",
+             color = "black",
+             linewidth = 0.4) +
+  
+  theme_classic(base_size = 14) +
+  labs(title = "MA Plot: Metformin vs Placebo",
+       x = "Average log-expression",
+       y = "Log2 Fold Change") +
+  theme(legend.position = "none")
+```
+
+
+```{r}
+# Volcanoplot
+
+res$Category <- "NS"
+
+# Primero los verdaderamente DE
+res$Category[res$logFC > 1 & res$adj.P.Val < 0.05] <- "UP"
+res$Category[res$logFC < -1 & res$adj.P.Val < 0.05] <- "DOWN"
+
+# Luego los parciales
+res$Category[abs(res$logFC) > 1 & res$adj.P.Val >= 0.05] <- "logFC"
+res$Category[abs(res$logFC) <= 1 & res$adj.P.Val < 0.05] <- "p-value"
+
+
+keyvals <- c(
+  NS = "grey85",
+  logFC = "#e0d688ff",
+  `p-value` = "#a186c4ff",
+  UP = "#FF7F7F",
+  DOWN = "#3dd0eeff"
+)
+
+colCustom <- keyvals[res$Category]
+
+
+# R
+EnhancedVolcano(
+  res,
+  lab = ifelse(is.na(res$SYMBOL) | res$SYMBOL == "", rownames(res), res$SYMBOL),
+  x = "logFC",
+  y = "adj.P.Val",
+  xlim = c(-2, 2),
+  ylim = c(0, 5.5),
+  ylab = expression(-Log[10]~adj~P),
+  pCutoff = 0.05,
+  FCcutoff = 1,
+  selectLab = c("PDK4", "TAS2R46", "SLC1A1", "HLA-DOA", "HOXD4", "BEX4", "CCL5", "RNF43", "GAPDHP42", "HRASLS5", "PPARGC1A", "SLC2A4", "PCK1", "RET"),
+  xlab = bquote(~Log[2]~ 'fold change'),
+  labSize = 3.5,
+  labCol = "black",
+  labFace = "bold",
+  boxedLabels = TRUE,
+  drawConnectors = TRUE,
+  widthConnectors = 0.5,
+  colConnectors = "black",
+  cutoffLineType = "twodash",
+  pointSize = 2.5,
+  colCustom = colCustom,
+  cutoffLineWidth = 0.8,
+  title = "Metformin vs Placebo",
+  subtitle = "Expresión diferencial en músculo esquelético",
+  caption = paste0(sum(res$Category == "UP"), " upregulated; ",
+                   sum(res$Category == "DOWN"), " downregulated")
+)
+```
+
+```{r}
+# Guardar resultados 
+UP_genes   <- res[res$Category == "UP", ]
+DOWN_genes <- res[res$Category == "DOWN", ]
+FDR_only <- res[res$Category == "p-value", ]
+
+nrow(UP_genes)
+nrow(DOWN_genes)
+nrow(FDR_only)
+```
+
+```{r}
+
+n_top <- 25
+
+top_up <- UP_genes[order(UP_genes$adj.P.Val), ][1:n_top, ]
+top_down <- DOWN_genes[order(DOWN_genes$adj.P.Val), ][1:n_top, ]
+
+selected_genes <- rbind(top_up, top_down)
+
+# Extraer expresión normalizada
+heatmap_data <- vobj_de$E[rownames(selected_genes), ]
+
+rownames(heatmap_data) <- res[rownames(selected_genes), "SYMBOL"]
+
+# Anotación de genes
+gene_annotation <- data.frame(
+  Regulation = ifelse(selected_genes$logFC > 0, "Up", "Down"),
+  row.names = rownames(heatmap_data)
+)
+
+# Anotación de muestras
+sample_annotation <- data.frame(
+  Treatment = meta$group,
+  Visits = meta$visit
+)
+rownames(sample_annotation) <- colnames(heatmap_data)
+
+# Ordenar filas por logFC (Up primero, Down después)
+heatmap_data <- heatmap_data[order(selected_genes$logFC, decreasing = TRUE), ]
+
+# Plot con colores por defecto
+pheatmap(
+  heatmap_data,
+  scale = "row",
+  clustering_method = "ward.D2",
+  annotation_row = gene_annotation,
+  annotation_col = sample_annotation,
+  main = paste("Top", n_top, "up y", n_top, "down genes"),
+  fontsize_row = 8,
+  fontsize_col = 10
+)
+```
+
 
