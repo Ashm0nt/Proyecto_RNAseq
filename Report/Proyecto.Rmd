@@ -341,7 +341,7 @@ res <- topTable(fit, coef = "groupMetformin", number = Inf, sort.by = "P")
 head(res)
 ```
 
-
+#### MA plot
 ```{r}
 
 df <- data.frame(
@@ -385,6 +385,12 @@ ggplot(df, aes(AveExpr, logFC)) +
   theme(legend.position = "none")
 ```
 
+En el MA plot se observa que la mayoría de los genes significativamente expresados (FDR < 0.05) presentan cambios moderados en la expresión (logFC entre -1 y 1). Esto sugiere que, aunque existen diferencias estadísticamente significativas, la respuesta al tratamiento con metformina en músculo esquelético no es masiva, sino que se manifiesta como ajustes finos y moderados en la expresión génica.
+
+Además, se aprecia una alta densidad de genes significativos en el rango de baja expresión (lado izquierdo del gráfico). La distribución simétrica de genes regulados positivamente y negativamente indica un impacto equilibrado sobre la homeostasis celular del músculo esquelético. Cabe destacar que se identificaron DEGs a lo largo de un amplio espectro de niveles de abundancia, lo que subraya la eficacia del filtrado y la normalización empleados para detectar cambios sutiles pero consistentes estadísticamente. 
+
+
+Dado que se trata de la respuesta a un tratamiento y considerando la variabilidad individual observada, los genes regulados positiva y negativamente (UP y DOWN) se consideraron con un umbral más bajo de logFC ≥ 0.5, siguiendo la misma estrategia aplicada en el artículo de referencia
 
 ```{r}
 # Volcanoplot
@@ -392,12 +398,12 @@ ggplot(df, aes(AveExpr, logFC)) +
 res$Category <- "NS"
 
 # Primero los verdaderamente DE
-res$Category[res$logFC > 1 & res$adj.P.Val < 0.05] <- "UP"
-res$Category[res$logFC < -1 & res$adj.P.Val < 0.05] <- "DOWN"
+res$Category[res$logFC > 0.5 & res$adj.P.Val < 0.05] <- "UP"
+res$Category[res$logFC < -0.5 & res$adj.P.Val < 0.05] <- "DOWN"
 
 # Luego los parciales
-res$Category[abs(res$logFC) > 1 & res$adj.P.Val >= 0.05] <- "logFC"
-res$Category[abs(res$logFC) <= 1 & res$adj.P.Val < 0.05] <- "p-value"
+res$Category[abs(res$logFC) > 0.5 & res$adj.P.Val >= 0.05] <- "logFC"
+res$Category[abs(res$logFC) <= 0.5 & res$adj.P.Val < 0.05] <- "p-value"
 
 
 keyvals <- c(
@@ -421,8 +427,8 @@ EnhancedVolcano(
   ylim = c(0, 5.5),
   ylab = expression(-Log[10]~adj~P),
   pCutoff = 0.05,
-  FCcutoff = 1,
-  selectLab = c("PDK4", "TAS2R46", "SLC1A1", "HLA-DOA", "HOXD4", "BEX4", "CCL5", "RNF43", "GAPDHP42", "HRASLS5", "PPARGC1A", "SLC2A4", "PCK1", "RET"),
+  FCcutoff = 0.5,
+  selectLab = c("PDK4", "TAS2R46", "SLC1A1", "HLA-DOA", "HOXD4", "BEX4", "CCL5", "RNF43", "GAPDHP42", "HRASLS5", "PPARGC1A", "SLC2A4", "PCK1", "RET", "RBBP8", "RPS6KA6", "ANGPT2", "SLC38A9", "GRAMD1B", "THBD", "RARRES3", "AFMID"),
   xlab = bquote(~Log[2]~ 'fold change'),
   labSize = 3.5,
   labCol = "black",
@@ -452,6 +458,9 @@ nrow(UP_genes)
 nrow(DOWN_genes)
 nrow(FDR_only)
 ```
+
+El análisis de expresión diferencial, visualizado mediante un Volcano Plot, identificó un total de 396 genes significativamente regulados por la metformina bajo un umbral de $|Log_2FC| > 0.5$ y $FDR < 0.05$ (130 incrementados y 266 disminuidos). Además, se identificaron 525 genes adicionales que alcanzaron significancia estadística ($FDR < 0.05$) con magnitudes de cambio menores, sugiriendo una modulación transcriptómica extensa pero sutil. Entre los genes con mayor significancia y magnitud destacan PDK4, SLC1A1, CCL5 y HLA-DOA. La robustez de estos hallazgos, a pesar de la heterogeneidad interindividual, valida la sensibilidad del modelo de efectos mixtos para capturar la firma molecular de la metformina en tejido muscular humano
+
 
 ```{r}
 
@@ -496,4 +505,126 @@ pheatmap(
 )
 ```
 
+Finalmente, el análisis de agrupamiento jerárquico (Heatmap) de los 50 genes con mayor varianza estadística reveló patrones de expresión consistentes con la acción de la metformina, logrando distinguir bloques de regulación positiva y negativa bien definidos. Si bien el dendrograma de muestras reflejó la predominancia de la variabilidad interindividual —confirmando los hallazgos del análisis de partición de varianza—, los genes seleccionados mostraron una respuesta coordinada al tratamiento. Marcadores como PDK4, AFMID y THBD exhibieron perfiles de expresión contrastantes entre condiciones, sugiriendo que la metformina induce una reprogramación metabólica específica en el músculo esquelético que trasciende el ruido biológico basal de los sujetos.
 
+
+#### Análisis de varianza para los genes más significativos
+
+```{r}
+# Filtrar los genes up y down
+vp_up <- vp[rownames(vp) %in% rownames(top_up), ]
+vp_down <- vp[rownames(vp) %in% rownames(top_down), ]
+
+geneNames_up <- top_up$SYMBOL[match(rownames(vp_up), rownames(top_up))]
+geneNames_down <- top_down$SYMBOL[match(rownames(vp_down), rownames(top_down))]
+
+# Reemplazar rownames en vp_up y vp_down
+rownames(vp_up) <- geneNames_up
+rownames(vp_down) <- geneNames_down
+
+effect <- "group"
+vp_up_sorted <- vp_up[order(vp_up[, effect], decreasing = TRUE), ]
+vp_down_sorted <- vp_down[order(vp_down[, effect], decreasing = TRUE), ]
+
+# Graficar barras porcentuales
+plotPercentBars(vp_up_sorted) + ggtitle("Estructura de varianza - TOP Genes UP")
+plotVarPart(vp_up) + ggtitle("Estructura de varianza - Genes UP")
+```
+
+Al contrastar la estructura de varianza de los genes upregulated con la tendencia global del transcriptoma, se observa un enriquecimiento sustancial en la proporción de varianza explicada por el tratamiento (group). Mientras que a nivel genómico el impacto de la metformina es sutil, en el conjunto de genes UP este factor llega a explicar hasta el 30% de la variabilidad total. Esta reducción proporcional de la varianza residual, junto con la persistencia de un componente de sujeto (subject) estable, sugiere que estos genes representan una respuesta biológica robusta y consistente a través de la cohorte de adultos mayores, permitiendo que la señal del fármaco trascienda la heterogeneidad interindividual basal
+
+
+```{r}
+plotPercentBars(vp_down_sorted) + ggtitle("Estructura de varianza - TOP Genes DOWN")
+plotVarPart(vp_down) + ggtitle("Estructura de varianza - Genes DOWN")
+```
+
+El análisis de la estructura de varianza para los genes con regulación negativa (DOWN) ratificó la eficacia del modelo para aislar la señal del tratamiento frente a la heterogeneidad biológica. Se observó que el factor group explica una proporción sustancial de la variabilidad (mediana ~18%), un incremento drástico frente al nivel genómico basal. Notablemente, el componente subject mostró una influencia predominante en este conjunto, sugiriendo que la magnitud de la inhibición génica inducida por la metformina está íntimamente ligada al perfil individual de cada adulto mayor. La marcada contracción de la varianza residual en estos genes valida que los cambios identificados en vías de inflamación y remodelado de la matriz extracelular son estadísticamente robustos y representan una respuesta farmacológica genuina.
+
+#### MDS 
+
+```{r}
+genes_sel <- c(rownames(top_up), rownames(top_down))
+expr_sel <- vobj$E[genes_sel, ]
+
+plotMDS(expr_sel, 
+        col = colores[as.numeric(meta$group)],
+        pch = 16,
+        cex = 1.5,
+        main = "MDS por tratamiento",
+        xlab = "Dimensión 1",
+        ylab = "Dimensión 2")
+
+# Añadir leyenda mejorada
+legend("bottomleft", 
+       legend = levels(meta$group),
+       col = colores[1:length(levels(meta$group))], 
+       pch = 16,
+       cex = 0.8,
+       title = "Tratamiento",
+       bty = "o",           # Con borde
+       bg = "white",        # Fondo blanco
+       box.lwd = 1)         # Grosor del borde
+```
+
+La eficacia de la firma transcriptómica identificada se confirmó mediante un análisis de escalamiento multidimensional (MDS) restringido a los genes diferencialmente expresados. A diferencia del análisis global, este modelo logró explicar el 57% de la varianza total, con un 45% concentrado en la primera dimensión, la cual separa de manera efectiva las muestras tratadas con metformina de aquellas que recibieron placebo. Este incremento sustancial en la varianza explicada demuestra que, si bien la variabilidad interindividual es elevada, la metformina induce cambios coordinados y consistentes en un conjunto específico de genes metabólicos y estructurales, permitiendo una clara distinción molecular entre las condiciones experimentales.
+
+### Interpretación de resultados
+
+#### GENES UPREGULATED
+
+| Gen | Producto | Función |
+|-----|----------|---------|
+|  CHMP1B-AS1 | lncRNA antisense de CHMP1B |   Regulación del gen CHMP1B, posible modulación del tráfico endosómico, degradación de proteínas, secreción de vesículas; potencial impacto en proliferación o apoptosis     |
+|   PDK4  |    Piruvato deshidrogenasa quinasa 4 (enzima)      |    Fosforila e inhibe el complejo piruvato deshidrogenasa (PDH), reduciendo la conversión de piruvato a acetil-CoA; promueve el metabolismo de ácidos grasos sobre glucosa. Mecanismo adaptativo de flexibilidad metabólica    |
+|  DYNC2LI1    |      Dynein Cytoplasmic 2 Light Intermediate Chain 1 (proteína, subunidad ligera-intermedia de dineína 2)    |   Parte del complejo dineína 2 que participa en transporte retrógrado intraflagelar (IFT), moviendo proteínas desde el extremo distal del cilio hacia la base. Podría mejorar el transporte de receptores y señalización celular dependiente de cilios, contribuyendo a la adaptación metabólica a metformina      |
+|   RBBP8  |      Retinoblastoma Binding Protein 8 (proteína, también llamada CtIP)    |     Participa en reparación de ADN por recombinación homóloga, resectando extremos de ADN en daños de doble cadena; también regula progresión del ciclo celular en fase S/G2    |
+|   RPS6KA6  |     Ribosomal Protein S6 Kinase A6 (RSK4, serina/treonina quinasa)     |    Quinasa dependiente de MAPK, regula proliferación, diferenciación, supervivencia celular, y puede inhibir el crecimiento celular; también se ha vinculado con regulación de metabolismo energético     |
+|   NACA2  |    Nascent Polypeptide-Associated Complex Subunit Alpha 2      |    Se une a polipéptidos nacientes que no son secretorios mientras emergen del ribosoma, evitando su destino inapropiado al ER. Bloquea la interacción con la Signal Recognition Particle (SRP) y reduce la afinidad de los ribosomas por sitios de translocación en la membrana del ER (M sites). Previene agregación y asegura el correcto plegamiento y destino de proteínas   |
+|   ANGPT2  |     Angiopoietin 2 (proteína secretada)     |     Ligando de los receptores Tie2 en células endoteliales. Regula angiogénesis, remodelación vascular y permeabilidad endotelial. Puede antagonizar ANGPT1-Tie2 para promover desestabilización vascular y favorecer remodelado bajo estrés o crecimiento    |
+|   BMP6  |   Bone Morphogenetic Protein 6 (proteína secretada, factor de crecimiento TGF-β)       |   Regula diferenciación ósea y adipogénica, metabolismo del hierro, angiogénesis y homeostasis celular; activa vías SMAD dependientes      |
+|   OSTM1  |     Osteopetrosis Associated Transmembrane Protein 1     |     Subunidad reguladora de la ClC-7 necesaria para acidificación lisosomal y función de osteoclastos; participa en homeostasis lisosomal, degradación de proteínas y transporte de iones    |
+| SEC11C | Signal Peptidase Complex Subunit SEC11C | Subunidad del complejo peptidasa de señal, que corta péptidos señal de proteínas nacientes durante su translocación al retículo endoplásmico (ER); esencial para maduración de proteínas secretadas |
+| TAS2R46 |  Taste receptor type 2 member 46 (receptor GPCR)| Receptor acoplado a proteína G (GPCR) sensible a compuestos amargos. Participa en señalización intracelular, incluyendo rutas de calcio y cAMP; se expresa también fuera de la lengua, en células metabólicas y endoteliales | 
+| SLC38A9 |  Solute Carrier Family 38 Member 9 (transceptor de aminoácidos, transportador de arginina/lisina) |  Actúa como sensor y transportador de aminoácidos en lisosomas, regulando la vía mTORC1; permite que el complejo Rag GTPasa detecte nutrientes y ajuste el crecimiento y metabolismo|
+
+
+La firma molecular identificada en este estudio posiciona a la metformina como un agente de resiliencia metabólica en el músculo esquelético del adulto mayor. Un hallazgo central es la regulación positiva de PDK4, que en conjunto con el sensor de aminoácidos lisosomal SLC38A9, señala una restauración de la flexibilidad metabólica; la capacidad de alternar eficientemente entre sustratos energéticos es una facultad que declina con la edad y cuya pérdida subyace a la fragilidad muscular. Esta reprogramación se complementa con la modulación de quinasas y reguladores del ciclo celular como RPS6KA6 (RSK4) y RBBP8, sugiriendo una optimización de las vías de supervivencia y reparación del ADN frente al daño acumulado por el envejecimiento.
+
+Particularmente relevante para el contexto geriátrico es el fortalecimiento de los mecanismos de proteostasis y control de calidad celular. La sobreexpresión de genes como NACA2, SEC11C y OSTM1 indica una mejora en la fidelidad de la síntesis proteica y en la eficiencia de la degradación lisosomal. Estos procesos son críticos, ya que la acumulación de proteínas mal plegadas y la disfunción autofágica son motores primarios de la sarcopenia. Asimismo, la identificación de CHMP1B-AS1 y DYNC2LI1 apunta a una regulación sofisticada del tráfico vesicular y la señalización mediada por cilios, mecanismos emergentes en la adaptación metabólica celular.
+
+Finalmente, la regulación de factores secretados y de señalización intercelular, como ANGPT2, BMP6 y el receptor extra-gustativo TAS2R46, sugiere una mejora en el microambiente tisular que abarca desde la remodelación vascular hasta la homeostasis del hierro y la comunicación paracrina. En conjunto, estos resultados demuestran que el impacto de la metformina trasciende el control glucémico convencional, actuando como un geroprotector integral capaz de intervenir en los pilares del mantenimiento celular necesarios para preservar la funcionalidad física y la autonomía en la vejez.
+
+
+
+### GENES DOWNREGULATED
+
+| Gen | Producto | Función |
+|-----|----------|---------|
+| GRAMD1B| GRAM domain-containing protein 1B| Proteína de membrana que regula transporte de colesterol y lípidos entre retículo endoplásmico y membrana plasmática, manteniendo homeostasis lipídica y señalización. Podría significar un ajuste del metabolismo lipídico, disminuyendo transporte de lípidos hacia la membrana y favoreciendo rutas de catabolismo de energía  | 
+| WNT11 | Wnt family member 11 (proteína secretada, señalización no canónica) | Señalización no canónica Wnt que regula morfogénesis, polaridad celular, migración y remodelado citosquelético; contribuye a diferenciación celular y desarrollo vascular.Ajuste selectivo del remodelado celular, reduciendo migración y reorganización activa del citosqueleto, |
+| GP1BA | Glycoprotein Ib platelet subunit alpha |  Subunidad alfa del receptor GP Ib-IX-V; participa en adhesión plaquetaria, señalización y hemostasia, interactuando con factor de von Willebrand |
+| COL3A1 |  Collagen type III alpha 1 chain (proteína estructural ECM) |Componente de la matriz extracelular, aporta elasticidad y soporte estructural a vasos sanguíneos, piel y tejido conectivo; participa en remodelado tisular y señalización mecánica. La disminución tras metformina podría reflejar reducción del remodelado ECM activo | 
+| THBD |  Thrombomodulin (proteína transmembrana endotelial) | Receptor transmembrana que se une a trombina, activando proteína C anticoagulante; regula coagulación, inflamación y homeostasis vascular. modulación del microambiente vascular y reducción de estrés hemostático en respuesta a cambios metabólicos |
+| RARRES3 | Retinoic acid receptor responder protein 3  |  Proteína inducida por retinoides que regula diferenciación celular, señalización antiproliferativa y homeostasis de membranas lipídicas; puede tener efectos en estrés celular y control de crecimiento. Refleja reducción de señales de diferenciación o estrés celular no prioritario|  
+| AFMID | Arylformamidase |  Enzima que cataliza un paso en la vía de degradación del triptófano hacia la niacinamida y NAD⁺, modulando metabolismo energético y estrés oxidativo| 
+| NLRP3 |NLR family pyrin domain containing 3 (inflammasoma)  | Sensor citosólico que forma el inflammasoma NLRP3, activando caspasa-1, maduración de IL-1β/IL-18 y respuesta inflamatoria |
+|  HLA-DOA | Major histocompatibility complex, class II, DO alpha | Subunidad alfa de HLA-DO, que regula la presentación de antígenos por HLA clase II, modulando la carga de péptidos en células presentadoras de antígeno. Rducción de activación inmune adaptativa local | 
+| RASSF2 | Ras association domain family member 2 | Proteína supresora de tumores que regula Ras-MAPK, apoptosis y ciclo celular; modula respuesta a estrés y control de proliferación|
+| HOXD4 | Homeobox D4 | Factor de transcripción de la familia HOX, regula desarrollo, diferenciación celular y expresión génica específica de tejidos |
+| APOL1 | Apolipoprotein L1 |  Proteína implicada en transporte de lípidos, defensa contra patógenos y regulación de estrés oxidativo en células| 
+| CD3EAP| CD3e molecule associated protein |  Participa en transcripción ribosomal, regulación de proliferación y control del ciclo celular; asociado a la síntesis de ARN ribosomal y ensamblaje ribosomal|
+
+
+La respuesta de inhibición génica observada tras el tratamiento con metformina revela una desactivación coordinada de procesos patológicos intrínsecos al envejecimiento muscular. Esta «firma de apagado» se manifiesta, en primera instancia, a través de la atenuación del inflammaging y una profunda reprogramación inmune; la regulación a la baja de sensores críticos del inflammasoma, como NLRP3, y de moléculas de presentación de antígenos, como HLA-DOA, sugiere una pacificación del microambiente inmunológico que protege al tejido del daño colateral provocado por una respuesta inmune local crónicamente sobreactivada. Complementariamente, se identifica un control estricto sobre la dinámica de la matriz extracelular (ECM), evidenciado por la reducción de componentes estructurales como COL3A1 y mediadores de remodelado citosquelético como WNT11. Dado que el envejecimiento muscular se asocia con un proceso de fibro-sustitución que compromete la potencia y elasticidad, la disminución de estos genes sugiere que la metformina actúa frenando la expansión de la red fibrótica y preservando la integridad arquitectónica del tejido.
+
+Asimismo, la inhibición de reguladores del transporte lipídico, representados por GRAMD1B y APOL1, apunta a una recalibración del metabolismo de lípidos y de la homeostasis de membranas. Este ajuste es fundamental en adultos mayores para mejorar la fluidez de la membrana plasmática y optimizar la señalización de receptores metabólicos, como el de la insulina, frecuentemente entorpecida por la acumulación lipídica ectópica. Finalmente, el descenso en la expresión de factores de transcripción y reguladores del ciclo celular, tales como HOXD4 y RASSF2, sugiere una transición hacia un estado de «quietud metabólica» y ahorro energético. Al desactivar programas de diferenciación y proliferación potencialmente ineficientes en un contexto de senescencia, el fármaco parece redirigir los recursos celulares hacia mecanismos de mantenimiento, reparación y resiliencia proteica. En conjunto, esta respuesta negativa no representa una pérdida de función, sino una intervención geroprotectora dual que desactiva las rutas de inflamación y rigidez estructural para restaurar un perfil molecular más saludable y funcional.
+
+
+## CONCLUSIÓN
+
+El presente estudio demuestra que el tratamiento con metformina en adultos mayores induce una reprogramación transcriptómica integral en el músculo esquelético, orientada hacia la restauración de la homeostasis celular y la resiliencia metabólica. Mediante la aplicación del modelo de efectos mixtos dream, fue posible discernir una firma molecular robusta a pesar de la elevada heterogeneidad interindividual propia de la población geriátrica. El análisis de la estructura de varianza confirmó la solidez de estos hallazgos: mientras que a nivel genómico global el efecto del tratamiento es sutil, en los genes identificados el factor group (metformina vs. placebo) logró explicar entre el 15% y el 30% de la variabilidad total, superando significativamente al ruido residual.
+
+Esta respuesta se caracteriza por una acción dual geroprotectora claramente diferenciada en su arquitectura de varianza. Por un lado, la activación de mecanismos críticos de proteostasis, flexibilidad metabólica y reparación celular —liderada por genes como PDK4 y NACA2— mostró una respuesta altamente consistente entre sujetos. Por otro lado, se observó una desactivación coordinada de procesos deletéreos como la inflamación crónica (inflammaging) y la fibrosis tisular —mediada por la represión de NLRP3 y COL3A1—, cuya magnitud de inhibición estuvo íntimamente ligada al perfil basal de cada individuo, evidenciando una modulación personalizada del microambiente muscular.
+
+En conjunto, estos hallazgos posicionan a la metformina no solo como un agente hipoglucemiante, sino como una intervención terapéutica capaz de mitigar múltiples pilares del envejecimiento biológico. Al demostrar una capacidad única para "limpiar" la señal del fármaco frente al ruido del envejecimiento, este estudio ofrece una base molecular sólida para el uso de la metformina en la preservación de la función muscular y la prevención de la fragilidad en la vejez.
