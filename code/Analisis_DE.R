@@ -246,6 +246,7 @@ dev.off()
 
 # Exploración de varianza con modelos lineales mixtos
 form_vp <- ~ (1 | group) + (1 | subject) + (1 | visit)
+param <- SerialParam(progressbar = TRUE)
 vobj <- voomWithDreamWeights(dge, form_vp, meta, BPPARAM = param)
 vp <- fitExtractVarPartModel(vobj, form_vp, meta, BPPARAM = param)
 # Plotear varianza
