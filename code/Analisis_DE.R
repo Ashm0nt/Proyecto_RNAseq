@@ -9,7 +9,7 @@ library("EnhancedVolcano")
 library("pheatmap")
 library("ggplot2")
 
-rse_muscle = readRDS("../processed_data/rse_muscle")
+rse_muscle = readRDS("../processed_data/rse_muscle.rds")
 
 # Convertir tratamiento a factor
 rse_muscle$sra_attribute.drug <-
