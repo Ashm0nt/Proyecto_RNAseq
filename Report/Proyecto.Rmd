@@ -372,6 +372,7 @@ El análisis de escalamiento multidimensional (MDS) no mostró una separación e
 
 ```{r variance_partition, message=FALSE, warning=FALSE, echo=TRUE}
 form_vp <- ~ (1|group) + (1|subject) + (1|visit)
+param <- SerialParam(progressbar = TRUE)
 vobj <- voomWithDreamWeights(dge, form_vp, meta, BPPARAM = param)
 vp <- fitExtractVarPartModel(vobj, form_vp, meta, BPPARAM = param)
 plotVarPart(vp)
