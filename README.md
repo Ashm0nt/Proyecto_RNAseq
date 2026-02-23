@@ -204,13 +204,13 @@ Para asegurar la transparencia y reproducibilidad de este análisis, se incluye 
 4. Esto generará un archivo HTML con todo el código, las visualizaciones de varianza y la discusión de resultados integrada.
 
 ## Referencias
-**Kulkarni, A. S., Brutsaert, E. F., Anghel, V., Zhang, K., Bloomgarden, N., Pollak, M., Mar, J. C., Hawkins, M., Crandall, J. P., & Barzilai, N.** (2018). Metformin regulates metabolic and nonmetabolic pathways in skeletal muscle and subcutaneous adipose tissues of older adults. *Aging Cell*, 17(2). (https://doi.org/10.1111/acel.12723)
-**Collado-Torres L, et al.** (2017). "Reproducible RNA-seq analysis using recount2". *Nature Biotechnology*. [DOI: 10.1038/nbt.3838](https://doi.org/10.1038/nbt.3838)
-**Dutta, S., Shah, R. B., Singhal, S., Dutta, S. B., Bansal, S., Sinha, S., & Haque, M.** (2023). Metformin: A Review of Potential Mechanism and Therapeutic Utility Beyond Diabetes. *Drug Design Development And Therapy*, Volume 17, 1907-1932. (https://doi.org/10.2147/dddt.s409373)
-**Kulkarni, A. S., Gubbi, S., & Barzilai, N**. (2020). Benefits of Metformin in Attenuating the Hallmarks of Aging. *Cell Metabolism*, 32(1), 15-30. (https://doi.org/10.1016/j.cmet.2020.04.001)
-**Blighe, K.** (2018). EnhancedVolcano. *NCI BioConductor*. https://doi.org/10.18129/b9.bioc.enhancedvolcano
-**Collado-Torres, L.** (2024). recount3. *NCI BioConductor*. https://doi.org/10.18129/b9.bioc.recount3
-**Hoffman, G. E.** (2017). VariancePartition. *NCI BioConductor*. https://doi.org/10.18129/b9.bioc.variancepartition
+- **Kulkarni, A. S., Brutsaert, E. F., Anghel, V., Zhang, K., Bloomgarden, N., Pollak, M., Mar, J. C., Hawkins, M., Crandall, J. P., & Barzilai, N.** (2018). Metformin regulates metabolic and nonmetabolic pathways in skeletal muscle and subcutaneous adipose tissues of older adults. *Aging Cell*, 17(2). (https://doi.org/10.1111/acel.12723)
+- **Collado-Torres L, et al.** (2017). "Reproducible RNA-seq analysis using recount2". *Nature Biotechnology*. [DOI: 10.1038/nbt.3838](https://doi.org/10.1038/nbt.3838)
+- **Dutta, S., Shah, R. B., Singhal, S., Dutta, S. B., Bansal, S., Sinha, S., & Haque, M.** (2023). Metformin: A Review of Potential Mechanism and Therapeutic Utility Beyond Diabetes. *Drug Design Development And Therapy*, Volume 17, 1907-1932. (https://doi.org/10.2147/dddt.s409373)
+- **Kulkarni, A. S., Gubbi, S., & Barzilai, N**. (2020). Benefits of Metformin in Attenuating the Hallmarks of Aging. *Cell Metabolism*, 32(1), 15-30. (https://doi.org/10.1016/j.cmet.2020.04.001)
+- **Blighe, K.** (2018). EnhancedVolcano. *NCI BioConductor*. https://doi.org/10.18129/b9.bioc.enhancedvolcano
+- **Collado-Torres, L.** (2024). recount3. *NCI BioConductor*. https://doi.org/10.18129/b9.bioc.recount3
+- **Hoffman, G. E.** (2017). VariancePartition. *NCI BioConductor*. https://doi.org/10.18129/b9.bioc.variancepartition
 
 ##  Contacto
 
