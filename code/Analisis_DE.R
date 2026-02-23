@@ -72,7 +72,7 @@ plot_lib_sizes <- ggplot(
     panel.border = element_rect(color = "gray80", fill = NA, linewidth = 0.5)
   )
 
-ggsave("../results/lib_sizes_tratamiento.png", plot = plot_lib_sizes)
+ggsave("../results/plots/lib_sizes_tratamiento.png", plot = plot_lib_sizes)
 
 # Calcular la proporción de lecturas asignadas a genes
 rse_muscle$assigned_gene_prop <-
@@ -97,7 +97,10 @@ plot_asg_gene_probed <- ggplot(df_qc, aes(x = assigned_gene_prop)) +
     y = "Número de muestras"
   )
 
-ggsave("../results/assigned_gene_proportion.png", plot = plot_asg_gene_probed)
+ggsave(
+  "../results/plots/assigned_gene_proportion.png",
+  plot = plot_asg_gene_probed
+)
 
 
 plot_box_asg_gene_probed_box <- ggplot(
@@ -131,7 +134,7 @@ plot_box_asg_gene_probed_box <- ggplot(
   )
 
 ggsave(
-  "../results/assign_gene_proportion_treatment.png",
+  "../results/plots/assigned_gene_proportion_treatment.png",
   plot = plot_box_asg_gene_probed_box
 )
 
@@ -194,6 +197,8 @@ dge$genes <- data.frame(
   SYMBOL = gene_info_filtered$gene_name
 )
 
+saveRDS(rse_muscle_filtered, file = "../processed_data/rse_muscle_filtered.rds")
+
 # Número de genes filtrados
 num_genes_retenidos <- sum(keep_genes)
 num_genes_totales <- nrow(counts_muscle_filtered)
@@ -233,7 +238,7 @@ legend(
   box.lwd = 1
 )
 
-ggsave("../results/MDS_tratamiento.png", plot = MDS_all_genes)
+ggsave("../results/plots/MDS_tratamiento.png", plot = MDS_all_genes)
 
 # Exploración de varianza con modelos lineales mixtos
 form_vp <- ~ (1 | group) + (1 | subject) + (1 | visit)
@@ -307,7 +312,7 @@ MA_plot <- ggplot(df, aes(AveExpr, logFC)) +
   ) +
   theme(legend.position = "none")
 
-ggsave("../results/MA_plot.png", plot = MA_plot)
+ggsave("../results/plots/MA_plot.png", plot = MA_plot)
 
 
 # Volcanoplot
@@ -392,7 +397,7 @@ volcano_plot <- EnhancedVolcano(
 )
 
 # Guardar resultados
-ggsave("../results/volcano_metformin_vs_placebo.png", plot = volcano_plot)
+ggsave("../results/plots/volcano_metformin_vs_placebo.png", plot = volcano_plot)
 
 # Filtrar genes por categoría
 UP_genes <- res[res$Category == "UP", ]
@@ -402,19 +407,19 @@ FDR_only <- res[res$Category == "p-value", ]
 
 write.csv(
   UP_genes,
-  file = "../results/UP_genes_metformin_vs_placebo.csv",
+  file = "../processed_data/UP_genes_metformin_vs_placebo.csv",
   row.names = TRUE
 )
 
 write.csv(
   DOWN_genes,
-  file = "../results/DOWN_genes_metformin_vs_placebo.csv",
+  file = "../processed_data/DOWN_genes_metformin_vs_placebo.csv",
   row.names = TRUE
 )
 
 write.csv(
   FDR_only,
-  file = "../results/FDR_only_metformin_vs_placebo.csv",
+  file = "../processed_data/FDR_only_metformin_vs_placebo.csv",
   row.names = TRUE
 )
 
@@ -458,7 +463,7 @@ pheatmap(
   main = paste("Top", n_top, "up y", n_top, "down genes"),
   fontsize_row = 8,
   fontsize_col = 10,
-  filename = "../results/heatmap_top_genes.pdf" #Guardar imagen
+  filename = "../results/plots/heatmap_top_genes.png" #Guardar imagen
 )
 
 # Filtrar los genes up y down
@@ -484,9 +489,9 @@ p2 <- plotVarPart(vp_up) +
   ggtitle("Estructura de varianza - Genes UP")
 
 # Guardar como PNG
-ggsave("../results/variance_structure_TOP_UP.png", plot = p1)
+ggsave("../results/plots/variance_structure_TOP_UP.png", plot = p1)
 
-ggsave("../results/variance_structure_UP.png", plot = p2)
+ggsave("../results/plots/variance_structure_UP.png", plot = p2)
 
 # Crear objetos
 p3 <- plotPercentBars(vp_down_sorted) +
@@ -496,9 +501,9 @@ p4 <- plotVarPart(vp_down) +
   ggtitle("Estructura de varianza - Genes DOWN")
 
 # Guardar en PNG (alta resolución)
-ggsave("../results/variance_structure_TOP_DOWN.png", plot = p3)
+ggsave("../results/plots/variance_structure_TOP_DOWN.png", plot = p3)
 
-ggsave("../results/variance_structure_DOWN.png", plot = p4)
+ggsave("../results/plots/variance_structure_DOWN.png", plot = p4)
 
 # Seleccionar los genes de
 genes_sel <- c(rownames(top_up), rownames(top_down))
@@ -527,4 +532,4 @@ legend(
   box.lwd = 1
 ) # Grosor del borde
 
-ggsave("../results/MDS_top_genes.png", plot = MDS_de_plot)
+ggsave("../results/plots/MDS_top_genes.png", plot = MDS_de_plot)
