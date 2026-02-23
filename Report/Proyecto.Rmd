@@ -81,7 +81,7 @@ library("variancePartition")
 library("EnhancedVolcano")
 library("pheatmap")
 library("ggplot2")
-
+library("knitr")
 ```
 
 ## Acceso a los datos
@@ -111,7 +111,6 @@ rse_gene_SRP126485 <- create_rse(project_info)
 
 # Inspección rápida del objeto
 rse_gene_SRP126485
-
 ```
 
 
@@ -119,49 +118,84 @@ El estudio SRP126485 comprende 100 muestras provenientes de 14 individuos, evalu
 
 ## Preparación de los datos
 
-```{r trannsform_raw_count, message=FALSE, warning=FALSE}
-# Convetir las lecturas por núcleotido a cuentas por lectura 
-assay(rse_gene_SRP126485, "counts") <- compute_read_counts(rse_gene_SRP126485)
+```{r transform_counts_and_metadata, message=FALSE, warning=FALSE}
+# ------------------------------------------------------------
+# Transformación de datos y curación de metadatos
+# ------------------------------------------------------------
 
-# Inspeccionar la infromación experimental de cada muestra
-rse_gene_SRP126485$sra.sample_attributes[1:15]
+# Convertir cobertura por nucleótido a cuentas por gen
+assay(rse_gene_SRP126485, "counts") <- 
+  compute_read_counts(rse_gene_SRP126485)
 
-# Formatear información del experimento
-rse_gene_SRP126485 <-  expand_sra_attributes(rse_gene_SRP126485)
-colData(rse_gene_SRP126485)[
-    ,
-    grepl("^sra_attribute", colnames(colData(rse_gene_SRP126485)))
+# Expandir y explorar metadatos experimentales
+rse_gene_SRP126485 <- expand_sra_attributes(rse_gene_SRP126485)
+
+# Visualizar columnas derivadas de SRA
+colData(rse_gene_SRP126485)[ ,
+  grepl("^sra_attribute", colnames(colData(rse_gene_SRP126485)))
 ]
 
+# ------------------------------------------------------------
+# Filtrar tejido de interés: músculo esquelético
+# ------------------------------------------------------------
 
-# Filtrar tejido adiposo de músculo esquéletico
-keep <- rse_gene_SRP126485$sra_attribute.tissue == "Vastus lateralis muscle"
-rse_muscle <- rse_gene_SRP126485[,keep]
-table(rse_muscle$sra_attribute.tissue)
+keep_tissue <- 
+  rse_gene_SRP126485$sra_attribute.tissue == "Vastus lateralis muscle"
+
+rse_muscle <- rse_gene_SRP126485[, keep_tissue]
+
+# Confirmar dimensiones
 dim(rse_muscle)
+table(rse_muscle$sra_attribute.tissue)
 
-# Ajustar el tipo de dato de variables categóricas
-rse_muscle$sra_attribute.drug <- factor(rse_muscle$sra_attribute.drug)
+# ------------------------------------------------------------
+# Curación de variables categóricas
+# ------------------------------------------------------------
 
-# Eliminar espacios antes o después del guion
-rse_muscle$sra_attribute.source_name <- gsub("\\s*-\\s*", "-", 
-                                             rse_muscle$sra_attribute.source_name)
+# Convertir tratamiento a factor
+rse_muscle$sra_attribute.drug <- 
+  factor(rse_muscle$sra_attribute.drug)
 
-rse_muscle$sra_attribute.source_name <- factor(rse_muscle$sra_attribute.source_name)
+# Estandarizar nombres de muestra eliminando espacios alrededor del guion
+rse_muscle$sra_attribute.source_name <- 
+  gsub("\\s*-\\s*", "-", 
+       rse_muscle$sra_attribute.source_name)
 
-## Ajustar factor de drug para que placebo sea el baseline
-rse_muscle$sra_attribute.drug <-  relevel(rse_muscle$sra_attribute.drug, "Placebo")
+rse_muscle$sra_attribute.source_name <- 
+  factor(rse_muscle$sra_attribute.source_name)
 
+# Definir Placebo como nivel de referencia
+rse_muscle$sra_attribute.drug <- 
+  relevel(rse_muscle$sra_attribute.drug, ref = "Placebo")
 
-# Confirmar que cada individuo tenga muestras en ambas condiciones (Metformina y placebo)
-table(rse_muscle$sra_attribute.subject_id, rse_muscle$sra_attribute.drug)
+# ------------------------------------------------------------
+# Verificar diseño cruzado (cada sujeto en ambas condiciones)
+# ------------------------------------------------------------
 
-# Filtrar sujetos que no tengan una condición
-keep_subjects <- rse_muscle$sra_attribute.subject_id != "Subject8"
-rse_muscle <- rse_muscle[, keep_subjects]
+design_table <- table(
+  rse_muscle$sra_attribute.subject_id,
+  rse_muscle$sra_attribute.drug
+)
+
+# Identificar sujetos incompletos automáticamente
+complete_subjects <- rownames(design_table)[
+  rowSums(design_table > 0) == 2
+]
+
+rse_muscle <- rse_muscle[ ,
+  rse_muscle$sra_attribute.subject_id %in% complete_subjects
+]
+
+design_table <- table(
+  rse_muscle$sra_attribute.subject_id,
+  rse_muscle$sra_attribute.drug
+)
+
+kable(design_table,
+      caption = "Distribución de muestras por sujeto y tratamiento")
 ```
 
- Las muestras correspondientes a músculo esquelético se seleccionaron utilizando la variable `sra_attribute.tissue` contenida en el objeto, conservando únicamente aquellas anotadas como tejido muscular. Durante la inspección del diseño experimental se identificó que uno de los individuos (Subject8) no contaba con muestras en ambas condiciones. Dado que el análisis se basa en comparaciones pareadas dentro de sujeto, este individuo fue excluido para mantener la consistencia del modelo. Además las variables correspondientes al individuo y al tratamiento se codificaron como factores, estableciendo placebo como la categoría de referencia para facilitar la interpretación de los análisis posteriores.
+Las muestras correspondientes a músculo esquelético se seleccionaron utilizando la variable `sra_attribute.tissue` contenida en el objeto, conservando únicamente aquellas anotadas como tejido muscular. Durante la inspección del diseño experimental se identificó que uno de los individuos (Subject8) no contaba con muestras en ambas condiciones. Dado que el análisis se basa en comparaciones pareadas dentro de sujeto, este individuo fue excluido para mantener la consistencia del modelo. Además las variables correspondientes al individuo y al tratamiento se codificaron como factores, estableciendo placebo como la categoría de referencia para facilitar la interpretación de los análisis posteriores.
 
 ## Control de calidad 
 
@@ -208,7 +242,6 @@ ggplot(sequencing_depth, aes(x = drug, y = lib_size, fill = drug)) +
     plot.background = element_rect(fill = "white", color = NA),
     panel.border = element_rect(color = "gray80", fill = NA, linewidth = 0.5)
   )
-
 ```
 
 La mayoría de las muestras presentaron profundidades de secuenciación dentro del rango esperado para estudios de RNA-seq en humanos (mediana ≈ 16 millones de lecturas). Se identificó una muestra con un tamaño de biblioteca considerablemente menor (~0.9 millones) correspondiente a `Subject7`durante tratamiento placebo. 
@@ -252,7 +285,8 @@ rse_muscle_filtered <- rse_muscle_filtered[,
   rse_muscle_filtered$sra_attribute.subject_id %in% complete_subjects
 ]
 
-table(rse_muscle_filtered$sra_attribute.subject_id, rse_muscle_filtered$sra_attribute.drug)
+kable(tab,
+      caption = "Distribución de muestras por sujeto después del filtrado")
 ```
 
 Se eliminaron los sujetos 5 y 14 debido a que tras el filtrado no contaban con muestras en ambas condiciones.
@@ -260,7 +294,7 @@ Se eliminaron los sujetos 5 y 14 debido a que tras el filtrado no contaban con m
 
 ### Filtrado de genes 
 
-```{r}
+```{r filter_genes, message=FALSE, warning=FALSE, echo=TRUE}
 # Obtener counts
 counts_muscle_filtered <- assay(rse_muscle_filtered, "counts")
 
@@ -308,9 +342,12 @@ cat(sprintf("Porcentaje de genes retenidos: %.2f%%\n", porcentaje_genes))
 
 ### Exploración de varianza
 
-```{r}
+```{r MDS, message=FALSE, warning=FALSE, echo=TRUE}
+# Asignar colores para cada grupo
 
 colores <- c("#3dd0eeff", "#FF7F7F")
+
+#Plotear MDS con colores por grupo
 plotMDS(dge, 
         col = colores[as.numeric(meta$group)],
         pch = 16,
@@ -319,21 +356,21 @@ plotMDS(dge,
         xlab = "Dimensión 1",
         ylab = "Dimensión 2")
 
-# Añadir leyenda mejorada
+# Añadir leyenda 
 legend("topright", 
        legend = levels(meta$group),
        col = colores[1:length(levels(meta$group))], 
        pch = 16,
        cex = 0.8,
        title = "Tratamiento",
-       bty = "o",           # Con borde
-       bg = "white",        # Fondo blanco
-       box.lwd = 1)         # Grosor del borde
+       bty = "o",           
+       bg = "white",        
+       box.lwd = 1)         
 ```
 
 El análisis de escalamiento multidimensional (MDS) no mostró una separación evidente entre las condiciones de metformina y placebo en los primeros componentes principales. Dado que el MDS sugiere la presencia de múltiples fuentes de variabilidad en los datos, se procedió a realizar un análisis de partición de varianza mediante modelos lineales mixtos para cuantificar formalmente la contribución relativa del sujeto y del tratamiento a la variación transcriptómica observada.
 
-```{r}
+```{r variance_partition, message=FALSE, warning=FALSE, echo=TRUE}
 form_vp <- ~ (1|group) + (1|subject) + (1|visit)
 vobj <- voomWithDreamWeights(dge, form_vp, meta, BPPARAM = param)
 vp <- fitExtractVarPartModel(vobj, form_vp, meta, BPPARAM = param)
@@ -346,7 +383,8 @@ Para evaluar la contribución de las variables experimentales a la varianza glob
 
 ### Análisis de expresión diferencial
 
-```{r}
+```{r differential_expression, message=FALSE, warning=FALSE, echo=TRUE}
+# Analisis de expresión diferencial con dream
 form_de <- ~ group + (1|subject)
 param <- SerialParam(progressbar = TRUE)
 vobj_de <- voomWithDreamWeights(dge, form_de, meta, BPPARAM = param, plot=TRUE)
@@ -357,7 +395,7 @@ head(res)
 ```
 
 #### MA plot
-```{r}
+```{r MA_plot, message=FALSE, warning=FALSE, echo=TRUE}
 
 df <- data.frame(
   AveExpr = res$AveExpr,
@@ -407,7 +445,7 @@ Además, se aprecia una alta densidad de genes significativos en el rango de baj
 
 Dado que se trata de la respuesta a un tratamiento y considerando la variabilidad individual observada, los genes regulados positiva y negativamente (UP y DOWN) se consideraron con un umbral más bajo de logFC ≥ 0.5, siguiendo la misma estrategia aplicada en el artículo de referencia
 
-```{r}
+```{r Volcano_plot, message=FALSE, warning=FALSE, echo=TRUE}
 # Volcanoplot
 
 res$Category <- "NS"
@@ -420,7 +458,7 @@ res$Category[res$logFC < -0.5 & res$adj.P.Val < 0.05] <- "DOWN"
 res$Category[abs(res$logFC) > 0.5 & res$adj.P.Val >= 0.05] <- "logFC"
 res$Category[abs(res$logFC) <= 0.5 & res$adj.P.Val < 0.05] <- "p-value"
 
-
+# colores
 keyvals <- c(
   NS = "grey85",
   logFC = "#e0d688ff",
@@ -432,7 +470,7 @@ keyvals <- c(
 colCustom <- keyvals[res$Category]
 
 
-# R
+# Volcano plot con EnhancedVolcano
 EnhancedVolcano(
   res,
   lab = ifelse(is.na(res$SYMBOL) | res$SYMBOL == "", rownames(res), res$SYMBOL),
@@ -463,7 +501,7 @@ EnhancedVolcano(
 )
 ```
 
-```{r}
+```{r count_genes_categories, message=FALSE, warning=FALSE, echo=TRUE}
 # Guardar resultados 
 UP_genes   <- res[res$Category == "UP", ]
 DOWN_genes <- res[res$Category == "DOWN", ]
@@ -477,8 +515,8 @@ nrow(FDR_only)
 El análisis de expresión diferencial, visualizado mediante un Volcano Plot, identificó un total de 396 genes significativamente regulados por la metformina bajo un umbral de $|Log_2FC| > 0.5$ y $FDR < 0.05$ (130 incrementados y 266 disminuidos). Además, se identificaron 525 genes adicionales que alcanzaron significancia estadística ($FDR < 0.05$) con magnitudes de cambio menores, sugiriendo una modulación transcriptómica extensa pero sutil. Entre los genes con mayor significancia y magnitud destacan PDK4, SLC1A1, CCL5 y HLA-DOA. La robustez de estos hallazgos, a pesar de la heterogeneidad interindividual, valida la sensibilidad del modelo de efectos mixtos para capturar la firma molecular de la metformina en tejido muscular humano
 
 
-```{r}
-
+```{r heatmap, message=FALSE, warning=FALSE, echo=TRUE}
+# ELegir top genes
 n_top <- 25
 
 top_up <- UP_genes[order(UP_genes$adj.P.Val), ][1:n_top, ]
@@ -525,7 +563,7 @@ Finalmente, el análisis de agrupamiento jerárquico (Heatmap) de los 50 genes c
 
 #### Análisis de varianza para los genes más significativos
 
-```{r}
+```{r variance_top_genes_up, message=FALSE, warning=FALSE, echo=TRUE}
 # Filtrar los genes up y down
 vp_up <- vp[rownames(vp) %in% rownames(top_up), ]
 vp_down <- vp[rownames(vp) %in% rownames(top_down), ]
@@ -542,23 +580,31 @@ vp_up_sorted <- vp_up[order(vp_up[, effect], decreasing = TRUE), ]
 vp_down_sorted <- vp_down[order(vp_down[, effect], decreasing = TRUE), ]
 
 # Graficar barras porcentuales
-plotPercentBars(vp_up_sorted) + ggtitle("Estructura de varianza - TOP Genes UP")
-plotVarPart(vp_up) + ggtitle("Estructura de varianza - Genes UP")
+plotPercentBars(vp_up_sorted) +
+  ggtitle("Estructura de varianza - TOP Genes UP")
+
+plotVarPart(vp_up) +
+  ggtitle("Estructura de varianza - Genes UP")
 ```
 
 Al contrastar la estructura de varianza de los genes upregulated con la tendencia global del transcriptoma, se observa un enriquecimiento sustancial en la proporción de varianza explicada por el tratamiento (group). Mientras que a nivel genómico el impacto de la metformina es sutil, en el conjunto de genes UP este factor llega a explicar hasta el 30% de la variabilidad total. Esta reducción proporcional de la varianza residual, junto con la persistencia de un componente de sujeto (subject) estable, sugiere que estos genes representan una respuesta biológica robusta y consistente a través de la cohorte de adultos mayores, permitiendo que la señal del fármaco trascienda la heterogeneidad interindividual basal
 
 
-```{r}
-plotPercentBars(vp_down_sorted) + ggtitle("Estructura de varianza - TOP Genes DOWN")
-plotVarPart(vp_down) + ggtitle("Estructura de varianza - Genes DOWN")
+```{r variance_top_genes_down, message=FALSE, warning=FALSE, echo=TRUE}
+# Crear objetos
+plotPercentBars(vp_down_sorted) +
+  ggtitle("Estructura de varianza - TOP Genes DOWN")
+
+plotVarPart(vp_down) +
+  ggtitle("Estructura de varianza - Genes DOWN")
 ```
 
 El análisis de la estructura de varianza para los genes con regulación negativa (DOWN) ratificó la eficacia del modelo para aislar la señal del tratamiento frente a la heterogeneidad biológica. Se observó que el factor group explica una proporción sustancial de la variabilidad (mediana ~18%), un incremento drástico frente al nivel genómico basal. Notablemente, el componente subject mostró una influencia predominante en este conjunto, sugiriendo que la magnitud de la inhibición génica inducida por la metformina está íntimamente ligada al perfil individual de cada adulto mayor. La marcada contracción de la varianza residual en estos genes valida que los cambios identificados en vías de inflamación y remodelado de la matriz extracelular son estadísticamente robustos y representan una respuesta farmacológica genuina.
 
 #### MDS 
 
-```{r}
+```{r MDS_top_genes, message=FALSE, warning=FALSE, echo=TRUE}
+# Seleccionar los genes de
 genes_sel <- c(rownames(top_up), rownames(top_down))
 expr_sel <- vobj$E[genes_sel, ]
 
