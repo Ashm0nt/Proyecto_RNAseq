@@ -248,7 +248,7 @@ La mayoría de las muestras presentaron profundidades de secuenciación dentro d
 
 ### Lecturas asignadas a genes
 
-```{r lectures_genes, message=FALSE, warning=FALSE, echo=TRUE}
+```{r lectures_genes, message=FALSE, warning=FALSE, echo=TRUE, fig.align="center", fig.width=12, fig.height=8, out.width="0.9\\linewidth"}
 # Calcular la proporción de lecturas asignadas a genes
 rse_muscle$assigned_gene_prop <-
   rse_muscle$recount_qc.gene_fc_count_all.assigned /
@@ -269,6 +269,38 @@ ggplot(df_qc, aes(x = assigned_gene_prop)) +
     title = "Proporción de lecturas asignadas a genes",
     x = "Fracción de lecturas",
     y = "Número de muestras"
+  )
+
+
+# Plot de lecturas asignadas a genes por tratamiento
+ggplot(
+  df_qc,
+  aes(x = drug, y = assigned_gene_prop, fill = drug)
+) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, alpha = 0.7) +
+  labs(
+    title = "Lecturas asignadas a genes por tratamiento",
+    x = "Tratamiento",
+    y = "Número de lecturas asingadas a genes"
+  ) +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(
+      size = 18,
+      face = "bold",
+      hjust = 0.5,
+      color = "#222222"
+    ),
+    axis.title.y = element_text(size = 13, margin = margin(r = 12)),
+    axis.text.x = element_text(size = 13, face = "bold", color = "#222222"),
+    axis.text.y = element_text(size = 11, color = "#333333"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(color = "gray85", linewidth = 0.6),
+    panel.grid.minor.y = element_line(color = "gray93", linewidth = 0.4),
+    legend.position = "none",
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.border = element_rect(color = "gray80", fill = NA, linewidth = 0.5)
   )
 
 #Filtrar muestras con pocas lescturas asignadas
