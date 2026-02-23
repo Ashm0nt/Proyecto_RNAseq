@@ -259,7 +259,8 @@ summary(rse_muscle$assigned_gene_prop)
 
 #Visualización
 df_qc <- data.frame(
-  assigned_gene_prop = rse_muscle$assigned_gene_prop
+  assigned_gene_prop = rse_muscle$assigned_gene_prop,
+  drug = rse_muscle$sra_attribute.drug
 )
 
 ggplot(df_qc, aes(x = assigned_gene_prop)) +
