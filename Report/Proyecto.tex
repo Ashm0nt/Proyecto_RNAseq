@@ -207,7 +207,7 @@
     
     \vfill
     
-    {\Large 20 de febrero de 2026\par}
+    {\Large 22 de febrero de 2026\par}
 
 \end{titlepage}
 
@@ -662,7 +662,8 @@ genes}\label{lecturas-asignadas-a-genes}
 \begin{Highlighting}[]
 \CommentTok{\#Visualización}
 \NormalTok{df\_qc }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
-  \AttributeTok{assigned\_gene\_prop =}\NormalTok{ rse\_muscle}\SpecialCharTok{$}\NormalTok{assigned\_gene\_prop}
+  \AttributeTok{assigned\_gene\_prop =}\NormalTok{ rse\_muscle}\SpecialCharTok{$}\NormalTok{assigned\_gene\_prop,}
+  \AttributeTok{drug =}\NormalTok{ rse\_muscle}\SpecialCharTok{$}\NormalTok{sra\_attribute.drug}
 \NormalTok{)}
 
 \FunctionTok{ggplot}\NormalTok{(df\_qc, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ assigned\_gene\_prop)) }\SpecialCharTok{+}
@@ -676,7 +677,44 @@ genes}\label{lecturas-asignadas-a-genes}
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{Proyecto_files/figure-latex/lectures_genes-1.pdf}}
+\begin{center}\includegraphics[width=0.9\linewidth]{Proyecto_files/figure-latex/lectures_genes-1} \end{center}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Plot de lecturas asignadas a genes por tratamiento}
+\FunctionTok{ggplot}\NormalTok{(}
+\NormalTok{  df\_qc,}
+  \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ drug, }\AttributeTok{y =}\NormalTok{ assigned\_gene\_prop, }\AttributeTok{fill =}\NormalTok{ drug)}
+\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{(}\AttributeTok{outlier.shape =} \ConstantTok{NA}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_jitter}\NormalTok{(}\AttributeTok{width =} \FloatTok{0.15}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.7}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Lecturas asignadas a genes por tratamiento"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Tratamiento"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Número de lecturas asingadas a genes"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{(}\AttributeTok{base\_size =} \DecValTok{15}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}
+      \AttributeTok{size =} \DecValTok{18}\NormalTok{,}
+      \AttributeTok{face =} \StringTok{"bold"}\NormalTok{,}
+      \AttributeTok{hjust =} \FloatTok{0.5}\NormalTok{,}
+      \AttributeTok{color =} \StringTok{"\#222222"}
+\NormalTok{    ),}
+    \AttributeTok{axis.title.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{13}\NormalTok{, }\AttributeTok{margin =} \FunctionTok{margin}\NormalTok{(}\AttributeTok{r =} \DecValTok{12}\NormalTok{)),}
+    \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{13}\NormalTok{, }\AttributeTok{face =} \StringTok{"bold"}\NormalTok{, }\AttributeTok{color =} \StringTok{"\#222222"}\NormalTok{),}
+    \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{11}\NormalTok{, }\AttributeTok{color =} \StringTok{"\#333333"}\NormalTok{),}
+    \AttributeTok{panel.grid.major.x =} \FunctionTok{element\_blank}\NormalTok{(),}
+    \AttributeTok{panel.grid.major.y =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{color =} \StringTok{"gray85"}\NormalTok{, }\AttributeTok{linewidth =} \FloatTok{0.6}\NormalTok{),}
+    \AttributeTok{panel.grid.minor.y =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{color =} \StringTok{"gray93"}\NormalTok{, }\AttributeTok{linewidth =} \FloatTok{0.4}\NormalTok{),}
+    \AttributeTok{legend.position =} \StringTok{"none"}\NormalTok{,}
+    \AttributeTok{plot.background =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{color =} \ConstantTok{NA}\NormalTok{),}
+    \AttributeTok{panel.border =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{color =} \StringTok{"gray80"}\NormalTok{, }\AttributeTok{fill =} \ConstantTok{NA}\NormalTok{, }\AttributeTok{linewidth =} \FloatTok{0.5}\NormalTok{)}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics[width=0.9\linewidth]{Proyecto_files/figure-latex/lectures_genes-2} \end{center}
 
 \begin{Shaded}
 \begin{Highlighting}[]
