@@ -214,8 +214,12 @@ cat(sprintf("Porcentaje de genes retenidos: %.2f%%\n", porcentaje_genes))
 
 colores <- c("#3dd0eeff", "#FF7F7F")
 
-#Plotear MDS con colores por grupo
-MDS_all_genes <- plotMDS(
+
+# MDS plot para explorar agrupamiento por tratamiento
+
+png("../results/plots/MDS_tratamiento.png", width = 800, height = 600)
+
+plotMDS(
   dge,
   col = colores[as.numeric(meta$group)],
   pch = 16,
@@ -225,7 +229,6 @@ MDS_all_genes <- plotMDS(
   ylab = "Dimensión 2"
 )
 
-# Añadir leyenda
 legend(
   "topright",
   legend = levels(meta$group),
@@ -238,15 +241,17 @@ legend(
   box.lwd = 1
 )
 
-ggsave("../results/plots/MDS_tratamiento.png", plot = MDS_all_genes)
+dev.off()
+
 
 # Exploración de varianza con modelos lineales mixtos
 form_vp <- ~ (1 | group) + (1 | subject) + (1 | visit)
 vobj <- voomWithDreamWeights(dge, form_vp, meta, BPPARAM = param)
 vp <- fitExtractVarPartModel(vobj, form_vp, meta, BPPARAM = param)
+# Plotear varianza
 var_plot <- plotVarPart(vp)
 
-ggsave("../results/variance_partition.png", plot = var_plot)
+ggsave("../results/plots/variance_partition.png", plot = var_plot)
 
 saveRDS(dge, file = "../processed_data/dge_muscle.rds")
 
