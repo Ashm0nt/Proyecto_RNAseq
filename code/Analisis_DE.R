@@ -515,7 +515,10 @@ ggsave("../results/plots/variance_structure_DOWN.png", plot = p4)
 genes_sel <- c(rownames(top_up), rownames(top_down))
 expr_sel <- vobj$E[genes_sel, ]
 
-MDS_de_plot <- plotMDS(
+png("../results/plots/MDS_top_genes.png", width = 800, height = 600)
+
+
+plotMDS(
   expr_sel,
   col = colores[as.numeric(meta$group)],
   pch = 16,
@@ -538,4 +541,4 @@ legend(
   box.lwd = 1
 ) # Grosor del borde
 
-ggsave("../results/plots/MDS_top_genes.png", plot = MDS_de_plot)
+dev.off()
