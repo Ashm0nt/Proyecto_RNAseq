@@ -105,6 +105,39 @@
 % Set default figure placement to htbp
 \def\fps@figure{htbp}
 \makeatother
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 \ifLuaTeX
 \usepackage[bidi=basic]{babel}
 \else
@@ -191,14 +224,15 @@ antihiperglucémica, este fármaco presenta múltiples efectos
 pleiotrópicos en diversos procesos biológicos, entre ellos la
 inflamación, el estrés oxidativo, la senescencia celular, la autofagia y
 la apoptosis, todos estrechamente vinculados con el envejecimiento
-(\textbf{Kulkarni2020?}; \textbf{Kulkarni2018?}; \textbf{Dutta2023?}).
-Estudios epidemiológicos han sugerido un posible efecto geroprotector de
-la metformina, asociado con la reducción en la incidencia de
-enfermedades relacionadas con la edad, como las enfermedades
-cardiovasculares, distintos tipos de cáncer y padecimientos
+(\textbf{Kulkarni-2020?}; \textbf{Kulkarni-2018?};
+\textbf{Dutta-2023?}). Estudios epidemiológicos han sugerido un posible
+efecto geroprotector de la metformina, asociado con la reducción en la
+incidencia de enfermedades relacionadas con la edad, como las
+enfermedades cardiovasculares, distintos tipos de cáncer y padecimientos
 neurodegenerativos, así como con una disminución de la mortalidad
-independiente de sus efectos sobre el metabolismo de la glucosa
-(\textbf{Kulkarni2020?}; \textbf{Kulkarni2018?}; \textbf{Dutta2023?}).
+independiente de sus efectos sobre el metabolismo de la glucosa (Ameya
+S. Kulkarni, Gubbi, y Barzilai 2020; Ameya S. Kulkarni et~al. 2018;
+Dutta et~al. 2023).
 
 El músculo esquelético desempeña un papel central en a homostasis
 metabólica del organismos y es particularmente suceptible a los cambios
@@ -208,10 +242,10 @@ capacidad oxidativa, contribuyen al deterioro de la calidad de vida en
 adultos mayores. Comprender cómo la metformina modula la biología
 molecular del músculo esquelético puede aportar unformación clave sobre
 como los mecanismos mediante los cuaes este fármaco influye en la salud
-durante el envejecimiento (\textbf{Kulkarni2018?}).
+durante el envejecimiento (Ameya S. Kulkarni et~al. 2018).
 
 El conjunto de datos analizados en este proyecto se deriva del estudio
-de Kulkarni et al. (\textbf{Kulkarni2018?}) generados a partir de
+de Kulkarni et al. (Ameya S. Kulkarni et~al. 2018) generados a partir de
 muestras de músculo esquelético y tejido adiposo subcutáneo de adultos
 de aproximadamente 70 años de edad (n=14). El estudio original se diseñó
 como un ensayo aleatorizado, doble ciego, controlado con placebo y con
@@ -1489,6 +1523,32 @@ del envejecimiento, este estudio ofrece una base molecular sólida para
 el uso de la metformina en la preservación de la función muscular y la
 prevención de la fragilidad en la vejez.
 
-\section{Referencias}\label{referencias}
+\section*{Referencias}\label{referencias}
+\addcontentsline{toc}{section}{Referencias}
+
+\phantomsection\label{refs}
+\begin{CSLReferences}{1}{0}
+\bibitem[\citeproctext]{ref-dutta-2023}
+Dutta, Siddhartha, Rima B Shah, Shubha Singhal, Sudeshna Banerjee Dutta,
+Sumit Bansal, Susmita Sinha, y Mainul Haque. 2023. {«{Metformin: A
+Review of Potential Mechanism and Therapeutic Utility Beyond
+Diabetes}»}. \emph{Drug Design Development and Therapy} Volume 17
+(junio): 1907-32. \url{https://doi.org/10.2147/dddt.s409373}.
+
+\bibitem[\citeproctext]{ref-kulkarni-2018}
+Kulkarni, Ameya S, Erika F Brutsaert, Valentin Anghel, Kehao Zhang, Noah
+Bloomgarden, Michael Pollak, Jessica C Mar, Meredith Hawkins, Jill P
+Crandall, y Nir Barzilai. 2018. {«{Metformin regulates metabolic and
+nonmetabolic pathways in skeletal muscle and subcutaneous adipose
+tissues of older adults}»}. \emph{Aging Cell} 17 (2).
+\url{https://doi.org/10.1111/acel.12723}.
+
+\bibitem[\citeproctext]{ref-kulkarni-2020}
+Kulkarni, Ameya S., Sriram Gubbi, y Nir Barzilai. 2020. {«{Benefits of
+Metformin in Attenuating the Hallmarks of Aging}»}. \emph{Cell
+Metabolism} 32 (1): 15-30.
+\url{https://doi.org/10.1016/j.cmet.2020.04.001}.
+
+\end{CSLReferences}
 
 \end{document}
