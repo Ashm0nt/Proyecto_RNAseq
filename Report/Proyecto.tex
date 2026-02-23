@@ -224,10 +224,10 @@ antihiperglucémica, este fármaco presenta múltiples efectos
 pleiotrópicos en diversos procesos biológicos, entre ellos la
 inflamación, el estrés oxidativo, la senescencia celular, la autofagia y
 la apoptosis, todos estrechamente vinculados con el envejecimiento
-(\textbf{Kulkarni-2020?}; \textbf{Kulkarni-2018?};
-\textbf{Dutta-2023?}). Estudios epidemiológicos han sugerido un posible
-efecto geroprotector de la metformina, asociado con la reducción en la
-incidencia de enfermedades relacionadas con la edad, como las
+(Ameya S. Kulkarni, Gubbi, y Barzilai 2020; Ameya S. Kulkarni et~al.
+2018; Dutta et~al. 2023). Estudios epidemiológicos han sugerido un
+posible efecto geroprotector de la metformina, asociado con la reducción
+en la incidencia de enfermedades relacionadas con la edad, como las
 enfermedades cardiovasculares, distintos tipos de cáncer y padecimientos
 neurodegenerativos, así como con una disminución de la mortalidad
 independiente de sus efectos sobre el metabolismo de la glucosa (Ameya
@@ -636,7 +636,7 @@ La mayoría de las muestras presentaron profundidades de secuenciación
 dentro del rango esperado para estudios de RNA-seq en humanos (mediana ≈
 16 millones de lecturas). Se identificó una muestra con un tamaño de
 biblioteca considerablemente menor (\textasciitilde0.9 millones)
-correspondiente a \texttt{Subject7}durante tratamiento placebo.
+correspondiente a \texttt{Subject7} durante tratamiento placebo.
 
 \subsubsection{Lecturas asignadas a
 genes}\label{lecturas-asignadas-a-genes}
@@ -868,7 +868,7 @@ técnico o biológico no capturado por el diseño inicial, subrayando la
 importancia de emplear métodos robustos de normalización y filtrado
 antes del análisis de expresión diferencial
 
-\subsubsection{Análisis de expresión
+\subsection{Análisis de expresión
 diferencial}\label{anuxe1lisis-de-expresiuxf3n-diferencial}
 
 \begin{Shaded}
@@ -908,7 +908,7 @@ diferencial}\label{anuxe1lisis-de-expresiuxf3n-diferencial}
 ## ENSG00000170310.14  5.773738 8.819095e-07 0.0027205437 5.607397  4.916309
 \end{verbatim}
 
-\paragraph{MA plot}\label{ma-plot}
+\subsubsection{MA plot}\label{ma-plot}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -954,7 +954,7 @@ diferencial}\label{anuxe1lisis-de-expresiuxf3n-diferencial}
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{Proyecto_files/figure-latex/MA_plot-1.pdf}}
+\includegraphics[width=\linewidth]{Proyecto_files/figure-latex/MA_plot-1}
 
 En el MA plot se observa que la mayoría de los genes significativamente
 expresados (FDR \textless{} 0.05) presentan cambios moderados en la
@@ -977,6 +977,10 @@ variabilidad individual observada, los genes regulados positiva y
 negativamente (UP y DOWN) se consideraron con un umbral más bajo de
 logFC ≥ 0.5, siguiendo la misma estrategia aplicada en el artículo de
 referencia
+
+\subsubsection{Volcano plot}\label{volcano-plot}
+
+\newpage
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1036,7 +1040,9 @@ referencia
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{Proyecto_files/figure-latex/Volcano_plot-1.pdf}}
+\begin{center}\includegraphics[width=\linewidth]{Proyecto_files/figure-latex/Volcano_plot-1} \end{center}
+
+\newpage
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1086,6 +1092,11 @@ interindividual, valida la sensibilidad del modelo de efectos mixtos
 para capturar la firma molecular de la metformina en tejido muscular
 humano
 
+\subsubsection{HEATMAP de genes
+seleccionados}\label{heatmap-de-genes-seleccionados}
+
+\newpage
+
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# ELegir top genes}
@@ -1131,7 +1142,7 @@ humano
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{Proyecto_files/figure-latex/heatmap-1.pdf}}
+\begin{center}\includegraphics[width=\linewidth]{Proyecto_files/figure-latex/heatmap-1} \end{center}
 
 Finalmente, el análisis de agrupamiento jerárquico (Heatmap) de los 50
 genes con mayor varianza estadística reveló patrones de expresión
@@ -1145,7 +1156,7 @@ expresión contrastantes entre condiciones, sugiriendo que la metformina
 induce una reprogramación metabólica específica en el músculo
 esquelético que trasciende el ruido biológico basal de los sujetos.
 
-\paragraph{Análisis de varianza para los genes más
+\subsubsection{Análisis de varianza para los genes más
 significativos}\label{anuxe1lisis-de-varianza-para-los-genes-muxe1s-significativos}
 
 \begin{Shaded}
@@ -1171,7 +1182,7 @@ significativos}\label{anuxe1lisis-de-varianza-para-los-genes-muxe1s-significativ
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{Proyecto_files/figure-latex/variance_top_genes_up-1.pdf}}
+\begin{center}\includegraphics[width=0.9\linewidth]{Proyecto_files/figure-latex/variance_top_genes_up-1} \end{center}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1180,7 +1191,7 @@ significativos}\label{anuxe1lisis-de-varianza-para-los-genes-muxe1s-significativ
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{Proyecto_files/figure-latex/variance_top_genes_up-2.pdf}}
+\begin{center}\includegraphics[width=0.9\linewidth]{Proyecto_files/figure-latex/variance_top_genes_up-2} \end{center}
 
 Al contrastar la estructura de varianza de los genes upregulated con la
 tendencia global del transcriptoma, se observa un enriquecimiento
@@ -1202,7 +1213,7 @@ heterogeneidad interindividual basal
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{Proyecto_files/figure-latex/variance_top_genes_down-1.pdf}}
+\begin{center}\includegraphics[width=0.9\linewidth]{Proyecto_files/figure-latex/variance_top_genes_down-1} \end{center}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1211,7 +1222,7 @@ heterogeneidad interindividual basal
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{Proyecto_files/figure-latex/variance_top_genes_down-2.pdf}}
+\begin{center}\includegraphics[width=0.9\linewidth]{Proyecto_files/figure-latex/variance_top_genes_down-2} \end{center}
 
 El análisis de la estructura de varianza para los genes con regulación
 negativa (DOWN) ratificó la eficacia del modelo para aislar la señal del
@@ -1227,7 +1238,7 @@ vías de inflamación y remodelado de la matriz extracelular son
 estadísticamente robustos y representan una respuesta farmacológica
 genuina.
 
-\paragraph{MDS}\label{mds}
+\subsubsection{MDS}\label{mds}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1270,10 +1281,10 @@ induce cambios coordinados y consistentes en un conjunto específico de
 genes metabólicos y estructurales, permitiendo una clara distinción
 molecular entre las condiciones experimentales.
 
-\subsubsection{Interpretación de
+\section{Interpretación de
 resultados}\label{interpretaciuxf3n-de-resultados}
 
-\paragraph{GENES UPREGULATED}\label{genes-upregulated}
+\subsection{GENES UPREGULATED}\label{genes-upregulated}
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2083}}
@@ -1381,7 +1392,7 @@ un geroprotector integral capaz de intervenir en los pilares del
 mantenimiento celular necesarios para preservar la funcionalidad física
 y la autonomía en la vejez.
 
-\subsubsection{GENES DOWNREGULATED}\label{genes-downregulated}
+\subsection{GENES DOWNREGULATED}\label{genes-downregulated}
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2083}}
@@ -1488,7 +1499,7 @@ intervención geroprotectora dual que desactiva las rutas de inflamación
 y rigidez estructural para restaurar un perfil molecular más saludable y
 funcional.
 
-\subsection{CONCLUSIÓN}\label{conclusiuxf3n}
+\section{CONCLUSIÓN}\label{conclusiuxf3n}
 
 El presente estudio demuestra que el tratamiento con metformina en
 adultos mayores induce una reprogramación transcriptómica integral en el

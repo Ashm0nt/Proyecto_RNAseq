@@ -244,7 +244,7 @@ ggplot(sequencing_depth, aes(x = drug, y = lib_size, fill = drug)) +
   )
 ```
 
-La mayoría de las muestras presentaron profundidades de secuenciación dentro del rango esperado para estudios de RNA-seq en humanos (mediana ≈ 16 millones de lecturas). Se identificó una muestra con un tamaño de biblioteca considerablemente menor (~0.9 millones) correspondiente a `Subject7`durante tratamiento placebo. 
+La mayoría de las muestras presentaron profundidades de secuenciación dentro del rango esperado para estudios de RNA-seq en humanos (mediana ≈ 16 millones de lecturas). Se identificó una muestra con un tamaño de biblioteca considerablemente menor (~0.9 millones) correspondiente a `Subject7` durante tratamiento placebo. 
 
 ### Lecturas asignadas a genes
 
@@ -382,7 +382,7 @@ plotVarPart(vp)
 Para evaluar la contribución de las variables experimentales a la varianza global de los datos de expresión génica, se realizó un análisis de partición de la varianza. El factor 'subject' (sujeto) emergió como una fuente significativa de variación, explicando una proporción sustancial de la varianza en un gran número de genes, lo que justifica su inclusión en el modelo lineal para controlar la heterogeneidad interindividual. Por el contrario, las variables 'group' (grupo) y 'visit' (visita) mostraron una contribución marginal a la varianza total en la mayoría de los genes. Cabe destacar que se observó una fracción elevada de varianza residual, lo que sugiere la presencia de ruido técnico o biológico no capturado por el diseño inicial, subrayando la importancia de emplear métodos robustos de normalización y filtrado antes del análisis de expresión diferencial
 
 
-### Análisis de expresión diferencial
+## Análisis de expresión diferencial
 
 ```{r differential_expression, message=FALSE, warning=FALSE, echo=TRUE}
 # Analisis de expresión diferencial con dream
@@ -395,8 +395,8 @@ res <- topTable(fit, coef = "groupMetformin", number = Inf, sort.by = "P")
 head(res)
 ```
 
-#### MA plot
-```{r MA_plot, message=FALSE, warning=FALSE, echo=TRUE}
+### MA plot
+```{r MA_plot, message=FALSE, warning=FALSE, echo=TRUE, fig.width=14,fig.height=10, out.width="\\linewidth"}
 
 df <- data.frame(
   AveExpr = res$AveExpr,
@@ -446,7 +446,15 @@ Además, se aprecia una alta densidad de genes significativos en el rango de baj
 
 Dado que se trata de la respuesta a un tratamiento y considerando la variabilidad individual observada, los genes regulados positiva y negativamente (UP y DOWN) se consideraron con un umbral más bajo de logFC ≥ 0.5, siguiendo la misma estrategia aplicada en el artículo de referencia
 
-```{r Volcano_plot, message=FALSE, warning=FALSE, echo=TRUE}
+### Volcano plot
+
+```{r, results='asis', echo=FALSE}
+cat("\\newpage")
+```
+
+
+```{r Volcano_plot, message=FALSE, warning=FALSE, echo=TRUE, fig.width=16, fig.height=12, out.width="\\linewidth",fig.align='center'}
+
 # Volcanoplot
 
 res$Category <- "NS"
@@ -502,6 +510,10 @@ EnhancedVolcano(
 )
 ```
 
+```{r, results='asis', echo=FALSE}
+cat("\\newpage")
+```
+
 ```{r count_genes_categories, message=FALSE, warning=FALSE, echo=TRUE}
 # Guardar resultados 
 UP_genes   <- res[res$Category == "UP", ]
@@ -515,8 +527,13 @@ nrow(FDR_only)
 
 El análisis de expresión diferencial, visualizado mediante un Volcano Plot, identificó un total de 396 genes significativamente regulados por la metformina bajo un umbral de $|Log_2FC| > 0.5$ y $FDR < 0.05$ (130 incrementados y 266 disminuidos). Además, se identificaron 525 genes adicionales que alcanzaron significancia estadística ($FDR < 0.05$) con magnitudes de cambio menores, sugiriendo una modulación transcriptómica extensa pero sutil. Entre los genes con mayor significancia y magnitud destacan PDK4, SLC1A1, CCL5 y HLA-DOA. La robustez de estos hallazgos, a pesar de la heterogeneidad interindividual, valida la sensibilidad del modelo de efectos mixtos para capturar la firma molecular de la metformina en tejido muscular humano
 
+### HEATMAP de genes seleccionados
 
-```{r heatmap, message=FALSE, warning=FALSE, echo=TRUE}
+```{r, results='asis', echo=FALSE}
+cat("\\newpage")
+```
+
+```{r heatmap, message=FALSE, warning=FALSE, echo=TRUE, fig.width=16, fig.height=12, out.width="\\linewidth",fig.align='center'}
 # ELegir top genes
 n_top <- 25
 
@@ -562,9 +579,10 @@ pheatmap(
 Finalmente, el análisis de agrupamiento jerárquico (Heatmap) de los 50 genes con mayor varianza estadística reveló patrones de expresión consistentes con la acción de la metformina, logrando distinguir bloques de regulación positiva y negativa bien definidos. Si bien el dendrograma de muestras reflejó la predominancia de la variabilidad interindividual —confirmando los hallazgos del análisis de partición de varianza—, los genes seleccionados mostraron una respuesta coordinada al tratamiento. Marcadores como PDK4, AFMID y THBD exhibieron perfiles de expresión contrastantes entre condiciones, sugiriendo que la metformina induce una reprogramación metabólica específica en el músculo esquelético que trasciende el ruido biológico basal de los sujetos.
 
 
-#### Análisis de varianza para los genes más significativos
+### Análisis de varianza para los genes más significativos
 
-```{r variance_top_genes_up, message=FALSE, warning=FALSE, echo=TRUE}
+```{r variance_top_genes_up, message=FALSE, warning=FALSE, echo=TRUE, fig.align="center", fig.width=12, fig.height=8, out.width="0.9\\linewidth"}
+
 # Filtrar los genes up y down
 vp_up <- vp[rownames(vp) %in% rownames(top_up), ]
 vp_down <- vp[rownames(vp) %in% rownames(top_down), ]
@@ -591,7 +609,7 @@ plotVarPart(vp_up) +
 Al contrastar la estructura de varianza de los genes upregulated con la tendencia global del transcriptoma, se observa un enriquecimiento sustancial en la proporción de varianza explicada por el tratamiento (group). Mientras que a nivel genómico el impacto de la metformina es sutil, en el conjunto de genes UP este factor llega a explicar hasta el 30% de la variabilidad total. Esta reducción proporcional de la varianza residual, junto con la persistencia de un componente de sujeto (subject) estable, sugiere que estos genes representan una respuesta biológica robusta y consistente a través de la cohorte de adultos mayores, permitiendo que la señal del fármaco trascienda la heterogeneidad interindividual basal
 
 
-```{r variance_top_genes_down, message=FALSE, warning=FALSE, echo=TRUE}
+```{r variance_top_genes_down, message=FALSE, warning=FALSE, echo=TRUE, fig.align="center", fig.width=12, fig.height=8, out.width="0.9\\linewidth"}
 # Crear objetos
 plotPercentBars(vp_down_sorted) +
   ggtitle("Estructura de varianza - TOP Genes DOWN")
@@ -602,7 +620,7 @@ plotVarPart(vp_down) +
 
 El análisis de la estructura de varianza para los genes con regulación negativa (DOWN) ratificó la eficacia del modelo para aislar la señal del tratamiento frente a la heterogeneidad biológica. Se observó que el factor group explica una proporción sustancial de la variabilidad (mediana ~18%), un incremento drástico frente al nivel genómico basal. Notablemente, el componente subject mostró una influencia predominante en este conjunto, sugiriendo que la magnitud de la inhibición génica inducida por la metformina está íntimamente ligada al perfil individual de cada adulto mayor. La marcada contracción de la varianza residual en estos genes valida que los cambios identificados en vías de inflamación y remodelado de la matriz extracelular son estadísticamente robustos y representan una respuesta farmacológica genuina.
 
-#### MDS 
+### MDS 
 
 ```{r MDS_top_genes, message=FALSE, warning=FALSE, echo=TRUE}
 # Seleccionar los genes de
@@ -631,9 +649,9 @@ legend("bottomleft",
 
 La eficacia de la firma transcriptómica identificada se confirmó mediante un análisis de escalamiento multidimensional (MDS) restringido a los genes diferencialmente expresados. A diferencia del análisis global, este modelo logró explicar el 57% de la varianza total, con un 45% concentrado en la primera dimensión, la cual separa de manera efectiva las muestras tratadas con metformina de aquellas que recibieron placebo. Este incremento sustancial en la varianza explicada demuestra que, si bien la variabilidad interindividual es elevada, la metformina induce cambios coordinados y consistentes en un conjunto específico de genes metabólicos y estructurales, permitiendo una clara distinción molecular entre las condiciones experimentales.
 
-### Interpretación de resultados
+# Interpretación de resultados
 
-#### GENES UPREGULATED
+## GENES UPREGULATED
 
 | Gen | Producto | Función |
 |-----|----------|---------|
@@ -659,7 +677,7 @@ Finalmente, la regulación de factores secretados y de señalización intercelul
 
 
 
-### GENES DOWNREGULATED
+## GENES DOWNREGULATED
 
 | Gen | Producto | Función |
 |-----|----------|---------|
@@ -683,7 +701,7 @@ La respuesta de inhibición génica observada tras el tratamiento con metformina
 Asimismo, la inhibición de reguladores del transporte lipídico, representados por GRAMD1B y APOL1, apunta a una recalibración del metabolismo de lípidos y de la homeostasis de membranas. Este ajuste es fundamental en adultos mayores para mejorar la fluidez de la membrana plasmática y optimizar la señalización de receptores metabólicos, como el de la insulina, frecuentemente entorpecida por la acumulación lipídica ectópica. Finalmente, el descenso en la expresión de factores de transcripción y reguladores del ciclo celular, tales como HOXD4 y RASSF2, sugiere una transición hacia un estado de «quietud metabólica» y ahorro energético. Al desactivar programas de diferenciación y proliferación potencialmente ineficientes en un contexto de senescencia, el fármaco parece redirigir los recursos celulares hacia mecanismos de mantenimiento, reparación y resiliencia proteica. En conjunto, esta respuesta negativa no representa una pérdida de función, sino una intervención geroprotectora dual que desactiva las rutas de inflamación y rigidez estructural para restaurar un perfil molecular más saludable y funcional.
 
 
-## CONCLUSIÓN
+# CONCLUSIÓN
 
 El presente estudio demuestra que el tratamiento con metformina en adultos mayores induce una reprogramación transcriptómica integral en el músculo esquelético, orientada hacia la restauración de la homeostasis celular y la resiliencia metabólica. Mediante la aplicación del modelo de efectos mixtos dream, fue posible discernir una firma molecular robusta a pesar de la elevada heterogeneidad interindividual propia de la población geriátrica. El análisis de la estructura de varianza confirmó la solidez de estos hallazgos: mientras que a nivel genómico global el efecto del tratamiento es sutil, en los genes identificados el factor group (metformina vs. placebo) logró explicar entre el 15% y el 30% de la variabilidad total, superando significativamente al ruido residual.
 
